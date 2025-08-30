@@ -5,6 +5,7 @@ import './index.css'
 import MainLayout from './layouts/MainLayout.tsx'
 import App from './App.tsx';
 import ResumesPage from './pages/ResumesPage.tsx';
+import DetailedResumePage from './pages/DetailedResumePage.tsx';
 
 
 const router = createBrowserRouter([{
@@ -19,6 +20,10 @@ const router = createBrowserRouter([{
     {
       path:'resumes',
       element:<ResumesPage/>
+    },
+    {
+      path:'resume/:resumeId',
+      element:<DetailedResumePage/>
     },
     {
       path: '*',
