@@ -1,0 +1,25 @@
+{
+   "resumes": [
+      {
+         "cvId": 1,
+         "cvTitle": "First Resume",
+         "cvImageUrl": "/images/resume_01.png",
+         "cvDescription": "wow a description of a very cool resume",
+         "cvUploadDate": "2024-05-15"
+      },
+      {
+         "cvId": 2,
+         "cvTitle": "second Resume",
+         "cvImageUrl": "/images/resume_02.png",
+         "cvDescription": "wow a short resume",
+         "cvUploadDate": "2024-05-15"
+      },
+      {
+         "cvId": 3,
+         "cvTitle": "third Resume",
+         "cvImageUrl": "/images/resume_03.png",
+         "cvDescription": "wow another description of a very cool resume",
+         "cvUploadDate": "2024-05-15"
+      }
+   ]
+}
