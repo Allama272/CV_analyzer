@@ -2,7 +2,7 @@ export interface IResume {
     cvId: number,
     cvTitle: string,
     cvImageUrl: string,
-    cvDescription: string,
+    cvScore: number,
     cvUploadDate: string
 }
 

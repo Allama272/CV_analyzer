@@ -13,10 +13,10 @@ const ScoreBadge = ({ score }: { score: number }) => {
             className={cn(
                 "flex flex-row gap-1 items-center px-2 py-0.5 rounded-[96px]",
                 score > 69
-                    ? "bg-badge-green"
+                    ? "bg-[var(--badge-green-bg)]"
                     : score > 39
-                        ? "bg-badge-yellow"
-                        : "bg-badge-red"
+                        ? "bg-[var(--badge-yellow-bg)]"
+                        : "bg-[var(--badge-red-bg)]"
             )}
         >
             <img
@@ -28,10 +28,10 @@ const ScoreBadge = ({ score }: { score: number }) => {
                 className={cn(
                     "text-sm font-medium",
                     score > 69
-                        ? "text-badge-green-text"
+                        ? "text-[var(--badge-green-text)]"
                         : score > 39
-                            ? "text-badge-yellow-text"
-                            : "text-badge-red-text"
+                            ? "text-[var(--badge-yellow-text)]"
+                            : "text-[var(--badge-red-text)]"
                 )}
             >
                 {score}/100
@@ -83,8 +83,8 @@ const CategoryContent = ({
                         className={cn(
                             "flex flex-col gap-2 rounded-2xl p-4",
                             tip.type === "good"
-                                ? "bg-green-50 border border-green-200 text-green-700"
-                                : "bg-yellow-50 border border-yellow-200 text-yellow-700"
+                                ? "bg-good-bg border border-good-border text-good-text"
+                                : "bg-improve-bg border border-improve-border text-improve-text"
                         )}
                     >
                         <div className="flex flex-row gap-2 items-center">

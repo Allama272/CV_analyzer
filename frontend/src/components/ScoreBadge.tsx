@@ -5,15 +5,15 @@ interface ScoreBadgeProps {
 const ScoreBadge: React.FC<ScoreBadgeProps> = ({ score }) => {
   let badgeColor = '';
   let badgeText = '';
-
+  
   if (score > 70) {
-    badgeColor = 'bg-badge-green text-green-600';
+    badgeColor = 'bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]';
     badgeText = 'Strong';
   } else if (score > 49) {
-    badgeColor = 'bg-badge-yellow text-yellow-600';
+    badgeColor = 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]';
     badgeText = 'Good Start';
   } else {
-    badgeColor = 'bg-badge-red text-red-600';
+    badgeColor = 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]';
     badgeText = 'Needs Work';
   }
 

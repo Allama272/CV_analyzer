@@ -24,8 +24,9 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
               x2="100%"
               y2="0%"
             >
-              <stop offset="0%" stopColor="#a78bfa" />
-              <stop offset="100%" stopColor="#fca5a5" />
+              <stop offset="0%" stopColor="var(--gauge-start)" />
+              <stop offset="50%" stopColor="var(--gauge-mid)" />
+              <stop offset="100%" stopColor="var(--gauge-end)" />
             </linearGradient>
           </defs>
 
@@ -33,7 +34,7 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
           <path
             d="M10,50 A40,40 0 0,1 90,50"
             fill="none"
-            stroke="#e5e7eb"
+            stroke="var(--gauge-bg)"
             strokeWidth="10"
             strokeLinecap="round"
           />
