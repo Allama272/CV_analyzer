@@ -3,6 +3,7 @@ using backend.DTO;
 using backend.Helpers;
 using backend.models;
 using Hangfire;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services;
 
@@ -63,5 +64,28 @@ public class ResumeService : IResumeService
             IsSuccess = true,
             Message = "Resume Uploaded Successfully"
         };
+    }
+
+    public async Task<List<ResumePreviewDto>>? GetAllResumesPreview(string userId)
+    {
+        var result = await _dbContext.Resumes.Where(r => r.UserId == userId)
+            .Where(r => r.Feedbacks != null && r.Feedbacks.Status == ProcessingStatus.Completed)
+            .Select(r => new ResumePreviewDto
+            {
+                ResumeId = r.Id,
+                ResumeOverallScore = r.Feedbacks!.OverallScore,
+                ResumePreviewUrl = GeneratePreviewUrl(r.ImagePreviewUrl),
+                ResumeTitle = r.Title,
+                ResumeUploadDate = r.UploadDate
+            })
+            .OrderByDescending(r => r.ResumeUploadDate)
+            .ToListAsync();
+        return result;
+    }
+
+    static private string GeneratePreviewUrl(string preview)
+    {
+        //TODO: make this method after choosing the storage, get the storage from the env maybe
+        return preview;
     }
 }
