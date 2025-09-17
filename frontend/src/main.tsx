@@ -7,7 +7,9 @@ import App from './App.tsx';
 import ResumesPage from './pages/ResumesPage.tsx';
 import DetailedResumePage from './pages/DetailedResumePage.tsx';
 import UploadResume from './pages/UploadResume.tsx';
-
+import LoginPage from './pages/LoginPage.tsx';
+import { AuthContextProvider } from "@/context/AuthContext.tsx"
+import AuthTest from './components/AuthTest.tsx';
 
 const router = createBrowserRouter([{
   path: '/',
@@ -19,26 +21,36 @@ const router = createBrowserRouter([{
       element: <App />,
     },
     {
-      path:'resumes',
-      element:<ResumesPage/>
+      path: 'resumes',
+      element: <ResumesPage />
     },
     {
-      path:'resume/:resumeId',
-      element:<DetailedResumePage/>
+      path: 'resume/:resumeId',
+      element: <DetailedResumePage />
     },
     {
-      path:'upload-resume',
-      element:<UploadResume/>
+      path: 'upload-resume',
+      element: <UploadResume />
     },
     {
       path: '*',
       element: <div>404 Not Found</div>,
+    },
+    {
+      path: 'login',
+      element: <LoginPage />
+    },
+    {
+      path: 'auth-test',
+      element: <AuthTest />
     }
   ]
-},
+}
 ])
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthContextProvider>
+      <RouterProvider router={router} />
+    </AuthContextProvider>
   </StrictMode >,
 )

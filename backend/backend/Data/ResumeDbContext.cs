@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Data;
 
-public class ResumeDbContext : IdentityDbContext<User>
+public class ResumeDbContext : DbContext
 {
     public ResumeDbContext(DbContextOptions<ResumeDbContext> options) : base(options)
     {

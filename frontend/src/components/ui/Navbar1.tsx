@@ -23,7 +23,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { NavLink } from "react-router";
-
+import { Link } from "react-router";
 interface MenuItem {
   title: string;
   url: string;
@@ -45,7 +45,7 @@ interface Navbar1Props {
       title: string;
       url: string;
     };
-    signup: {
+    signup?: {
       title: string;
       url: string;
     };
@@ -61,6 +61,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "@/components/theme-provider"
+import { UserAuth } from "@/context/AuthContext";
 const Navbar1 = ({
   logo = {
     url: "#",
@@ -80,12 +81,12 @@ const Navbar1 = ({
     }
   ],
   auth = {
-    login: { title: "Login", url: "#" },
-    signup: { title: "Sign up", url: "#" },
+    login: { title: "Login", url: "login" },
   },
 }: Navbar1Props) => {
 
   const { setTheme } = useTheme()
+  const { session, signOut } = UserAuth() || {};
   return (
     <section className="py-4">
       <div className="container">
@@ -107,13 +108,15 @@ const Navbar1 = ({
             </div>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm">
-              <a href={auth.login.url}>{auth.login.title}</a>
-            </Button>
-            <Button asChild size="sm">
-              <a href={auth.signup.url}>{auth.signup.title}</a>
-            </Button>
-
+            {!session ? (
+              <Button asChild variant="outline" size="sm">
+                <Link to={auth.login.url}>{auth.login.title}</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => signOut && signOut()}>
+                Logout
+              </Button>
+            )}
             {/* dark mode */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -124,19 +127,17 @@ const Navbar1 = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
+                <DropdownMenuItem onClick={() => setTheme("light")}> 
                   Light
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <DropdownMenuItem onClick={() => setTheme("dark")}> 
                   Dark
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
+                <DropdownMenuItem onClick={() => setTheme("system")}> 
                   System
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-
           </div>
         </nav>
 
@@ -200,12 +201,15 @@ const Navbar1 = ({
                     </Accordion>
 
                     <div className="flex flex-col gap-3">
-                      <Button asChild variant="outline">
-                        <a href={auth.login.url}>{auth.login.title}</a>
-                      </Button>
-                      <Button asChild>
-                        <a href={auth.signup.url}>{auth.signup.title}</a>
-                      </Button>
+                      {!session ? (
+                        <Button asChild variant="outline">
+                          <a href={auth.login.url}>{auth.login.title}</a>
+                        </Button>
+                      ) : (
+                        <Button variant="outline" onClick={() => signOut && signOut()}>
+                          Logout
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </SheetContent>
