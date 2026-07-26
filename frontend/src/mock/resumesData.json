@@ -1,0 +1,25 @@
+{
+   "resumes": [
+      {
+         "ResumeId": 1,
+         "ResumeTitle": "First Resume",
+         "ResumePreviewUrl": "/images/resume_01.png",
+         "ResumeOverallScore": 70,
+         "ResumeUploadDate": "2024-05-15"
+      },
+      {
+         "ResumeId": 2,
+         "ResumeTitle": "second Resume",
+         "ResumePreviewUrl": "/images/resume_02.png",
+         "ResumeOverallScore": 92,
+         "ResumeUploadDate": "2024-05-15"
+      },
+      {
+         "ResumeId": 3,
+         "ResumeTitle": "third Resume",
+         "ResumePreviewUrl": "/images/resume_03.png",
+         "ResumeOverallScore": 45 ,
+         "ResumeUploadDate": "2024-05-15"
+      }
+   ]
+}
