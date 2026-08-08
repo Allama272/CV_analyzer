@@ -1,25 +1,21 @@
-interface ScoreBadgeProps {
-  score: number;
-}
+import { cn } from "@/lib/utils";
+import { getScoreTier, SCORE_TIER_STYLES, SCORE_TIER_ICONS } from "@/lib/score";
 
-const ScoreBadge: React.FC<ScoreBadgeProps> = ({ score }) => {
-  let badgeColor = '';
-  let badgeText = '';
-  
-  if (score > 70) {
-    badgeColor = 'bg-[var(--badge-green-bg)] text-[var(--badge-green-text)]';
-    badgeText = 'Strong';
-  } else if (score > 49) {
-    badgeColor = 'bg-[var(--badge-yellow-bg)] text-[var(--badge-yellow-text)]';
-    badgeText = 'Good Start';
-  } else {
-    badgeColor = 'bg-[var(--badge-red-bg)] text-[var(--badge-red-text)]';
-    badgeText = 'Needs Work';
-  }
+const ScoreBadge = ({ score }: { score: number }) => {
+  const tier = getScoreTier(score);
+  const styles = SCORE_TIER_STYLES[tier];
+  const Icon = SCORE_TIER_ICONS[tier];
 
   return (
-    <div className={`px-2 md:px-3 py-1 rounded-full ${badgeColor}`}>
-      <p className="text-xs md:text-sm font-medium text-center">{badgeText}</p>
+    <div
+      className={cn(
+        "flex flex-row items-center gap-1 rounded-full border px-2 py-0.5",
+        styles.bg,
+        styles.border
+      )}
+    >
+      <Icon className={cn("size-4", styles.text)} />
+      <p className={cn("text-sm font-medium", styles.text)}>{score}/100</p>
     </div>
   );
 };

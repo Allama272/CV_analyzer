@@ -1,7 +1,8 @@
-import { Outlet } from "react-router"; // Use react-router-dom for Link
+import { Outlet } from "react-router";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
-import { Toaster } from 'sonner';
-import { Navbar1 } from "@/components/ui/Navbar1";
+import { Toaster } from "sonner";
+import Navbar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 
 function RootLayout() {
     return (
@@ -10,18 +11,18 @@ function RootLayout() {
         </ThemeProvider>
     );
 }
-
 function AppContent() {
     const { theme } = useTheme();
 
     return (
         <>
-            <div className="mx-3">
-                <Navbar1 />
-            </div>
-            <main>
+            <Navbar />
+            <main className="flex min-w-0 flex-1 flex-col pt-16 md:pt-0 md:pl-64">
                 <Toaster richColors theme={theme as "light" | "dark" | "system"} />
-                <Outlet />
+                <div className="flex-1 min-h-[90vh]">
+                    <Outlet />
+                </div>
+                <Footer />
             </main>
         </>
     );

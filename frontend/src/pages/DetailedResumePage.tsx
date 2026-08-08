@@ -84,7 +84,7 @@ function DetailedResumePage() {
     // Loading state
     if (!resumeData && !error) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
+            <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                 <div className="text-center">
                     <DotLottieReact src="/images/loadingRobot.lottie" className="w-92 mx-auto" loop autoplay />
                     <p className="mt-4 text-lg">Fetching your resume analysis...</p>
@@ -96,7 +96,7 @@ function DetailedResumePage() {
     // Error state
     if (error) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
+            <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Resume</h2>
                     <p className="text-gray-600 mb-4">{error}</p>
@@ -114,7 +114,7 @@ function DetailedResumePage() {
     // No data state
     if (!resumeData) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
+            <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold mb-4">Resume Not Found</h2>
                     <p className="text-gray-600">The requested resume could not be found.</p>
@@ -127,7 +127,7 @@ function DetailedResumePage() {
         case ProcessingStatus.Pending:
         case ProcessingStatus.Processing:
             return (
-                <div className="flex justify-center items-center min-h-screen">
+                <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                     <div className="text-center">
                         <DotLottieReact src="/images/loadingRobot.lottie" className="w-92 mx-auto" loop autoplay />
                         <h3 className="text-2xl font-bold mt-4">Analyzing Your Resume... 🤖</h3>
@@ -138,7 +138,7 @@ function DetailedResumePage() {
 
         case ProcessingStatus.Failed:
             return (
-                <div className="flex justify-center items-center min-h-screen">
+                <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                     <div className="text-center">
                         <h2 className="text-2xl font-bold text-red-600 mb-4">Analysis Failed</h2>
                         <p className="text-gray-600 mb-4">{error || "An unknown error occurred during analysis."}</p>
@@ -150,18 +150,22 @@ function DetailedResumePage() {
             return (
                 <div>
                     <div className="flex flex-row w-full max-lg:flex-col-reverse">
-                        <section className="feedback-section bg-[url('/images/bg-small.svg')] bg-cover h-[100vh] sticky top-0 items-center justify-center">
+                        <section className="sticky top-4 h-[calc(100vh-4rem)] w-1/2 max-lg:w-full flex items-center justify-center bg-[url('/images/bg-small.svg')] bg-cover px-8 py-8">
                             {resumeData.resumeImageUrl ? (
-                                <div className="animate-in fade-in duration-1000 gradient-border max-sm:m-0 h-[90%] max-wxl:h-fit w-fit">
-                                    <a href={`${storageLocation}/preview/${resumeData.resumeImageUrl}`} target="_blank" rel="noopener noreferrer">
+                                <div className="animate-in fade-in duration-1000 gradient-border max-sm:m-0 h-full max-h-full w-auto max-w-full p-2">
+                                    <a
+                                        href={`${storageLocation}/preview/${resumeData.resumeImageUrl}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         <img
                                             src={`${storageLocation}/preview/${resumeData.resumeImageUrl}`}
                                             alt="Resume preview"
-                                            className="w-full h-full object-contain rounded-2xl"
+                                            className="h-full w-full object-contain rounded-2xl"
                                             title="Click to view full size"
                                             onError={(e) => {
                                                 console.error('Failed to load resume image');
-                                                e.currentTarget.src = '/images/placeholder-resume.png'; // Fallback image
+                                                e.currentTarget.src = '/images/placeholder-resume.png';
                                             }}
                                         />
                                     </a>
@@ -228,7 +232,7 @@ function DetailedResumePage() {
 
         default:
             return (
-                <div className="flex justify-center items-center min-h-screen">
+                <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
                     <p>Unknown resume status.</p>
                 </div>
             );

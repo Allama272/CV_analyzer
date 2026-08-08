@@ -1,77 +1,81 @@
-import React from 'react'
+import { cn } from "@/lib/utils";
+import { getScoreTier, SCORE_TIER_STYLES, SCORE_TIER_ICONS, SCORE_TIER_LABEL } from "@/lib/score";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface Suggestion {
-    type: "good" | "improve";
-    tip: string;
+  type: "good" | "improve";
+  tip: string;
+}
+interface ATSProps {
+  score: number;
+  suggestions: Suggestion[];
 }
 
-interface ATSProps {
-    score: number;
-    suggestions: Suggestion[];
-}
+const TIP_ICONS = { good: CheckCircle2, improve: AlertTriangle } as const;
 
 const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
-    // Determine background gradient based on score
-    const gradientClass = score > 69
-        ? 'from-green-success'
-        : score > 49
-            ? 'from-warning-bg'
-            : 'from-error-bg';
+  const tier = getScoreTier(score);
+  const styles = SCORE_TIER_STYLES[tier];
+  const Icon = SCORE_TIER_ICONS[tier];
 
-    // Determine icon based on score
-    const iconSrc = score > 69
-        ? '/icons/ats-good.svg'
-        : score > 49
-            ? '/icons/ats-warning.svg'
-            : '/icons/ats-bad.svg';
-
-    // Determine subtitle based on score
-    const subtitle = score > 69
-        ? 'Great Job!'
-        : score > 49
-            ? 'Good Start'
-            : 'Needs Improvement';
-
-    return (
-        <div className={`bg-gradient-to-b ${gradientClass} to- rounded-2xl shadow-md shadow-border w-full p-6`}>
-            {/* Top section with icon and headline */}
-            <div className="flex items-center gap-4 mb-6 ">
-                <img src={iconSrc} alt="ATS Score Icon" className="w-12 h-12" />
-                <div>
-                    <h2 className="text-2xl font-bold">ATS Score - {score}/100</h2>
-                </div>
-            </div>
-
-            {/* Description section */}
-            <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-2">{subtitle}</h3>
-                <p className="text-foreground mb-4">
-                    This score represents how well your resume is likely to perform in Applicant Tracking Systems used by employers.
-                </p>
-
-                {/* Suggestions list */}
-                <div className="space-y-3">
-                    {suggestions.map((suggestion, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                            <img
-                                src={suggestion.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
-                                alt={suggestion.type === "good" ? "Check" : "Warning"}
-                                className="w-5 h-5 mt-1"
-                            />
-                            <p className={suggestion.type === "good" ? "text-green-700" : "text-amber-700"}>
-                                {suggestion.tip}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Closing encouragement */}
-            <p className="text-muted-foreground italic">
-                Keep refining your resume to improve your chances of getting past ATS filters and into the hands of recruiters.
-            </p>
+  return (
+    <div className="w-full rounded-2xl border border-border bg-card p-6 shadow-md shadow-border">
+      {/* Top section with icon and headline — colored icon in a neutral card, not a colored full-bleed panel */}
+      <div className="mb-6 flex items-center gap-4">
+        <div
+          className={cn(
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border",
+            styles.bg,
+            styles.border
+          )}
+        >
+          <Icon className={cn("h-6 w-6", styles.text)} />
         </div>
-    )
-}
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">ATS Score — {score}/100</h2>
+          <p className={cn("text-sm font-medium", styles.text)}>{SCORE_TIER_LABEL[tier]}</p>
+        </div>
+      </div>
 
-export default ATS
+      {/* Description section */}
+      <div className="mb-6">
+        <p className="mb-4 text-foreground">
+          This score represents how well your resume is likely to perform in Applicant
+          Tracking Systems used by employers.
+        </p>
+
+        {/* Suggestions list — each tip gets its own pastel/border chip instead of
+            colored text sitting on a same-hue background, so it stays readable
+            regardless of tier. */}
+        <div className="space-y-2">
+          {suggestions.map((suggestion, index) => {
+            const TipIcon = TIP_ICONS[suggestion.type];
+            const isGood = suggestion.type === "good";
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "flex items-start gap-3 rounded-lg border p-3",
+                  isGood
+                    ? "border-good-border bg-good-bg text-good-text"
+                    : "border-improve-border bg-improve-bg text-improve-text"
+                )}
+              >
+                <TipIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <p className="text-sm">{suggestion.tip}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Closing encouragement */}
+      <p className="text-sm italic text-muted-foreground">
+        Keep refining your resume to improve your chances of getting past ATS filters and
+        into the hands of recruiters.
+      </p>
+    </div>
+  );
+};
+
+export default ATS;

@@ -2,6 +2,7 @@ export interface IResume {
     resumeId: number,
     resumeTitle: string,
     resumeThumbnailUrl: string,
+    resumePdfUrl:string,
     resumeOverallScore: number,
     resumeUploadDate: string
 }
@@ -112,4 +113,47 @@ export interface ResumeJobFeedback {
         }[];
     };
 }
+export const JobStatus = {
+    Saved: 0,
+    Applied: 1,
+    Interviewing: 2,
+    Offered: 3,
+    Rejected: 4,
+    Archived: 5
+} as const;
+export type JobStatusType = typeof JobStatus[keyof typeof JobStatus];
 
+export interface JobFeedbacksMinimal {
+    feedbackId: number,
+    overallMatchScore: number,
+    resumeId: number,
+    resumeTitle: string,
+    resumeThumbnailUrl: string
+}
+export interface JobWithFeedbackPreview {
+    jobId: number,
+    company: string,
+    jobTitle: string,
+    status: JobStatusType,
+    feedbacks: JobFeedbacksMinimal[]
+}
+
+export interface JobWithBestMatchPreview {
+    jobId: number,
+    company: string,
+    jobTitle: string,
+    status: JobStatusType,
+    bestMatchScore: number | null, // null when no resumes have been analyzed yet
+    resumeCount: number,           // how many resumes were analyzed — 0 if none
+    createdAt: string
+}
+
+export interface JobDetail {
+    jobId: number;
+    company: string;
+    jobTitle: string;
+    jobDescription: string;
+    status: JobStatusType;
+    uploadDate: string;
+    feedbacks: JobFeedbacksMinimal[];
+}

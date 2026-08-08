@@ -5,40 +5,11 @@ import {
     AccordionHeader,
     AccordionItem,
 } from "./Accordion";
+import ScoreBadge from "./ScoreBadge";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 import type { ResumeFeedback } from "@/types";
 
-const ScoreBadge = ({ score }: { score: number }) => {
-    return (
-        <div
-            className={cn(
-                "flex flex-row gap-1 items-center px-2 py-0.5 rounded-[96px]",
-                score > 69
-                    ? "bg-[var(--badge-green-bg)]"
-                    : score > 39
-                        ? "bg-[var(--badge-yellow-bg)]"
-                        : "bg-[var(--badge-red-bg)]"
-            )}
-        >
-            <img
-                src={score > 69 ? "/icons/check.svg" : "/icons/warning.svg"}
-                alt="score"
-                className="size-4"
-            />
-            <p
-                className={cn(
-                    "text-sm font-medium",
-                    score > 69
-                        ? "text-[var(--badge-green-text)]"
-                        : score > 39
-                            ? "text-[var(--badge-yellow-text)]"
-                            : "text-[var(--badge-red-text)]"
-                )}
-            >
-                {score}/100
-            </p>
-        </div>
-    );
-};
+const TIP_ICONS = { good: CheckCircle2, improve: AlertTriangle } as const;
 
 const CategoryHeader = ({
     title,
@@ -48,7 +19,7 @@ const CategoryHeader = ({
     categoryScore: number;
 }) => {
     return (
-        <div className="flex flex-row gap-4 items-center py-2">
+        <div className="flex flex-row items-center gap-4 py-2">
             <p className="text-2xl font-semibold">{title}</p>
             <ScoreBadge score={categoryScore} />
         </div>
@@ -61,47 +32,46 @@ const CategoryContent = ({
     tips: { type: "good" | "improve"; tip: string; explanation: string }[];
 }) => {
     return (
-        <div className="flex flex-col gap-4 items-center w-full">
-            <div className="bg-muted w-full rounded-lg px-5 py-4 grid grid-cols-2 gap-4">
-                {tips.map((tip, index) => (
-                    <div className="flex flex-row gap-2 items-center" key={index}>
-                        <img
-                            src={
-                                tip.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"
-                            }
-                            alt="score"
-                            className="size-5"
-                        />
-                        <p className="text-xl ">{tip.tip}</p>
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col gap-4 w-full">
-                {tips.map((tip, index) => (
-                    <div
-                        key={index + tip.tip}
-                        className={cn(
-                            "flex flex-col gap-2 rounded-2xl p-4",
-                            tip.type === "good"
-                                ? "bg-good-bg border border-good-border text-good-text"
-                                : "bg-improve-bg border border-improve-border text-improve-text"
-                        )}
-                    >
-                        <div className="flex flex-row gap-2 items-center">
-                            <img
-                                src={
+        <div className="flex w-full flex-col items-center gap-4">
+            <div className="grid w-full grid-cols-2 gap-4 rounded-lg bg-muted px-5 py-4">
+                {tips.map((tip, index) => {
+                    const Icon = TIP_ICONS[tip.type];
+                    return (
+                        <div className="flex flex-row items-center gap-2" key={index}>
+                            <Icon
+                                className={cn(
+                                    "size-5 shrink-0",
                                     tip.type === "good"
-                                        ? "/icons/check.svg"
-                                        : "/icons/warning.svg"
-                                }
-                                alt="score"
-                                className="size-5"
+                                        ? "text-[var(--good-text)]"
+                                        : "text-[var(--improve-text)]"
+                                )}
                             />
-                            <p className="text-xl font-semibold">{tip.tip}</p>
+                            <p className="text-sm">{tip.tip}</p>
                         </div>
-                        <p>{tip.explanation}</p>
-                    </div>
-                ))}
+                    );
+                })}
+            </div>
+            <div className="flex w-full flex-col gap-4">
+                {tips.map((tip, index) => {
+                    const Icon = TIP_ICONS[tip.type];
+                    return (
+                        <div
+                            key={index + tip.tip}
+                            className={cn(
+                                "flex flex-col gap-2 rounded-2xl p-4",
+                                tip.type === "good"
+                                    ? "border border-good-border bg-good-bg text-good-text"
+                                    : "border border-improve-border bg-improve-bg text-improve-text"
+                            )}
+                        >
+                            <div className="flex flex-row items-center gap-2">
+                                <Icon className="size-5 shrink-0" />
+                                <p className="text-sm font-semibold">{tip.tip}</p>
+                            </div>
+                            <p>{tip.explanation}</p>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -109,13 +79,13 @@ const CategoryContent = ({
 
 const Details = ({ feedback }: { feedback: ResumeFeedback }) => {
     return (
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex w-full flex-col gap-4">
             <Accordion>
-                {/* formating */}
+                {/* formatting */}
                 <AccordionItem id="formatting">
                     <AccordionHeader itemId="formatting">
                         <CategoryHeader
-                            title="Formating"
+                            title="Formatting"
                             categoryScore={feedback.formatting.score}
                         />
                     </AccordionHeader>

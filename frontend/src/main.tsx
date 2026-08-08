@@ -10,6 +10,8 @@ import UploadResume from './pages/UploadResume.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import { AuthContextProvider } from "@/context/AuthContext.tsx"
 import JobsPage from './pages/JobsPage.tsx';
+import AddJobPage from './pages/AddJobPage.tsx';
+import JobDetailPage from './pages/JobDetailsPage.tsx';
 
 const router = createBrowserRouter([{
   path: '/',
@@ -33,8 +35,8 @@ const router = createBrowserRouter([{
       element: <UploadResume />
     },
     {
-      path:'jobs',
-      element:<JobsPage/>
+      path: 'jobs',
+      element: <JobsPage />
     },
     {
       path: '*',
@@ -43,7 +45,15 @@ const router = createBrowserRouter([{
     {
       path: 'login',
       element: <LoginPage />
-    }
+    },
+    {
+      path: 'add-job',
+      element: <AddJobPage />
+    },
+    {
+      path: 'job/:jobId',
+      element: <JobDetailPage />
+    },
   ]
 }
 ])

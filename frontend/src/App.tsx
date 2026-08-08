@@ -1,5 +1,4 @@
 import './App.css'
-import AuthTest from './components/AuthTest';
 import { UserAuth } from './context/AuthContext'
 
 function App() {
@@ -7,10 +6,12 @@ function App() {
 
   console.log(session);
   return (
-    <>
-      Home
-      <AuthTest></AuthTest>Open Localhost Links
-    </>
+    <div className="px-6 py-12">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-foreground">Home</h1>
+        <p className="mt-2 text-muted-foreground">Welcome back.</p>
+      </div>
+    </div>
   )
 }
 
