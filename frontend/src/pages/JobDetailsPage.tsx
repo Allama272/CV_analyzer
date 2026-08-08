@@ -1,285 +1,649 @@
-import { useParams } from "react-router";
-import { ProcessingStatus, type ResumeFeedback } from "@/types";
-import { useEffect, useRef, useState } from "react";
-import Summary from "@/components/Summary";
-import ATS from "@/components/ATS";
-import Details from "@/components/Details";
-import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarClock,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Sparkles,
+  Trash2,
+  Pencil,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import ScoreGauge from "@/components/ScoreGauge";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { getScoreTier, SCORE_TIER_STYLES } from "@/lib/score";
+import { STATUS_CONFIG, STATUS_ORDER } from "@/lib/job-status";
+import { relativeTime } from "@/lib/date";
 import { supabase } from "@/supabaseClient";
-import { toast } from "sonner";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import type { JobFeedbacksMinimal, JobStatusType, IResume, JobDetail } from "@/types";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTrigger, AlertDialog } from "@/components/ui/alert-dialog";
+import ScoreCircle from "@/components/ScoreCircle";
 
-const apiUrl = import.meta.env.VITE_DEV_SERVER;
-const storageLocation = import.meta.env.VITE_LOCAL_STORAGE;
-const RESUME_ENDPOINT = `${apiUrl}/api/resume/get-resume?resumeId=`;
+const apiUrl: string = import.meta.env.VITE_DEV_SERVER;
+const thumbnailUrl = `${import.meta.env.VITE_LOCAL_STORAGE}/thumbnail`;
+const MAX_DESC_CHARS = 400; // Threshold for showing the "Read more" toggle
 
-function DetailedResumePage() {
-  const { resumeId } = useParams<{ resumeId: string }>();
-  const [resumeData, setResumeData] = useState<ResumeFeedback | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const pollingTimer = useRef<number | null>(null);
-  useEffect(() => {
-    if (!resumeId) {
-      toast.error("Resume ID is missing");
-      setError("Resume ID is missing from the URL.");
-      return;
-    }
-
-    const pollResumeStatus = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error("Authentication error. Please log in again.");
-        }
-
-        // Fetching from the single resume endpoint
-        const response = await fetch(`${RESUME_ENDPOINT}${resumeId}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch resume status: ${response.statusText}`);
-        }
-
-        const result = (await response.json()) as ResumeFeedback;
-        setResumeData(result);
-
-        // --- Polling Logic ---
-        // If the status is still pending or processing, schedule the next poll.
-        if (
-          result.status === ProcessingStatus.Pending ||
-          result.status === ProcessingStatus.Processing
-        ) {
-          pollingTimer.current = window.setTimeout(pollResumeStatus, 3000); // Poll again after 3 seconds
-        } else {
-          // If completed or failed, we stop polling.
-          if (pollingTimer.current) {
-            clearTimeout(pollingTimer.current);
-          }
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unexpected error occurred.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-        if (pollingTimer.current) {
-          clearTimeout(pollingTimer.current);
-        }
-      }
-    };
-
-    // Start the polling process
-    pollResumeStatus();
-
-    // Cleanup function
-    return () => {
-      if (pollingTimer.current) {
-        clearTimeout(pollingTimer.current);
-      }
-    };
-  }, [resumeId]);
-
-  // Loading state
-  if (!resumeData && !error) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center">
-          <DotLottieReact
-            src="/images/loadingRobot.lottie"
-            className="mx-auto w-92"
-            loop
-            autoplay
-          />
-          <p className="mt-4 text-lg text-foreground">
-            Fetching your resume analysis...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-4 text-2xl font-bold text-[var(--error-text)]">
-            Error Loading Resume
-          </h2>
-          <p className="mb-4 text-muted-foreground">{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // No data state
-  if (!resumeData) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-4 text-2xl font-bold text-foreground">Resume Not Found</h2>
-          <p className="text-muted-foreground">
-            The requested resume could not be found.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  switch (resumeData.status) {
-    case ProcessingStatus.Pending:
-    case ProcessingStatus.Processing:
-      return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-          <div className="text-center">
-            <DotLottieReact
-              src="/images/loadingRobot.lottie"
-              className="mx-auto w-92"
-              loop
-              autoplay
-            />
-            <h3 className="mt-4 text-2xl font-bold text-foreground">
-              Analyzing Your Resume... 🤖
-            </h3>
-            <p className="mt-2 text-muted-foreground">
-              Our AI is working its magic. This may take a moment.
-            </p>
-          </div>
-        </div>
-      );
-
-    case ProcessingStatus.Failed:
-      return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-          <div className="text-center">
-            <h2 className="mb-4 text-2xl font-bold text-[var(--error-text)]">
-              Analysis Failed
-            </h2>
-            <p className="mb-4 text-muted-foreground">
-              {error || "An unknown error occurred during analysis."}
-            </p>
-          </div>
-        </div>
-      );
-
-    case ProcessingStatus.Completed:
-      return (
-        <div>
-          <div className="flex w-full flex-row max-lg:flex-col-reverse">
-            <section className="sticky top-4 flex h-[calc(100vh-4rem)] w-1/2 items-center justify-center bg-[url('/images/bg-small.svg')] bg-cover px-8 py-8 max-lg:w-full">
-              {resumeData.resumeImageUrl ? (
-                <div className="gradient-border h-full max-h-full w-auto max-w-full animate-in fade-in p-2 duration-1000 max-sm:m-0">
-                  <a
-                    href={`${storageLocation}/preview/${resumeData.resumeImageUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img
-                      src={`${storageLocation}/preview/${resumeData.resumeImageUrl}`}
-                      alt="Resume preview"
-                      className="h-full w-full rounded-2xl object-contain"
-                      title="Click to view full size"
-                      onError={(e) => {
-                        console.error("Failed to load resume image");
-                        e.currentTarget.src = "/images/placeholder-resume.png";
-                      }}
-                    />
-                  </a>
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <p className="text-muted-foreground">No preview available</p>
-                </div>
-              )}
-            </section>
-
-            <section className="feedback-section">
-              <h2 className="text-4xl font-bold text-primary">Resume Review</h2>
-              <div className="flex animate-in flex-col gap-8 fade-in duration-1000">
-                <Summary feedback={resumeData} />
-                <ATS
-                  score={resumeData.ats?.score || 0}
-                  suggestions={resumeData.ats?.tips || []}
-                />
-                <Details feedback={resumeData} />
-              </div>
-            </section>
-          </div>
-
-          <Separator className="mx-4 my-4" />
-
-          <h1 className="mx-auto px-5 pb-4 pt-10 text-center text-5xl sm:text-6xl">
-            Jobs Analyzed
-          </h1>
-          {/*
-            NOTE: this section is still hardcoded sample data (score 82, "AI Engineer",
-            "Gamma Pegassi TB", a fixed date) — it isn't wired to the real Jobs feature
-            we just built (JobsPage / JobDetailPage / JobWithBestMatchPreview). Once
-            you confirm what this should show — e.g. "jobs this resume has been
-            analyzed against" — I can wire it to real data or replace it with a link
-            into the Job Tracker. Left as-is for now so nothing breaks.
-          */}
-          <div className="mx-auto flex flex-col flex-wrap content-center justify-start gap-4 px-5 py-10 md:flex-row">
-            <Card className="h-64 w-52">
-              <CardHeader>
-                <CardTitle className="w-full overflow-hidden text-ellipsis text-center text-xl">
-                  AI Engineer
-                </CardTitle>
-                <CardDescription className="w-full overflow-hidden text-ellipsis text-center">
-                  Gamma Pegassi TB
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScoreGauge score={82} />
-              </CardContent>
-              <CardFooter>
-                <CardDescription className="w-full text-center">
-                  2024-05-15
-                </CardDescription>
-              </CardFooter>
-            </Card>
-
-            {/* Add a new job */}
-            <Card className="flex h-64 w-52 items-center justify-center transition-shadow hover:cursor-pointer hover:shadow-xl hover:shadow-border">
-              <button
-                className="text-7xl text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => {
-                  toast.info("Add job functionality coming soon!");
-                }}
-                aria-label="Add new job analysis"
-              >
-                +
-              </button>
-            </Card>
-          </div>
-        </div>
-      );
-
-    default:
-      return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-          <p className="text-foreground">Unknown resume status.</p>
-        </div>
-      );
-  }
+function ScoreBadge({ score }: { score: number }) {
+  const styles = SCORE_TIER_STYLES[getScoreTier(score)];
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full border px-2.5 py-1 text-sm font-semibold",
+        styles.bg,
+        styles.text,
+        styles.border
+      )}
+    >
+      {score}% match
+    </span>
+  );
 }
 
-export default DetailedResumePage;
+function FeedbackRow({
+  feedback,
+  isBest,
+  jobTitle,
+  company,
+}: {
+  feedback: JobFeedbacksMinimal;
+  isBest: boolean;
+  jobTitle: string;
+  company: string;
+}) {
+  return (
+    <Link
+      to={`/job-analyzed/${feedback.feedbackId}`}
+      state={{ jobTitle, company, resumeTitle: feedback.resumeTitle }}
+      className={cn(
+        "flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors",
+        isBest ? "bg-accent" : "hover:bg-muted"
+      )}
+    >
+      <img
+        src={`${thumbnailUrl}/${feedback.resumeThumbnailUrl}`}
+        alt={feedback.resumeTitle}
+        className="h-14 w-11 shrink-0 rounded border border-border object-cover"
+      />
+      <span className="flex-1 truncate text-sm font-medium text-foreground">
+        {feedback.resumeTitle}
+      </span>
+      <ScoreBadge score={feedback.overAllMatchScore} />
+      {isBest && (
+        <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+          Best
+        </span>
+      )}
+    </Link>
+  );
+}
+
+function JobDetailPage() {
+  const { jobId } = useParams<{ jobId: string }>();
+  const navigate = useNavigate();
+
+  const [job, setJob] = useState<JobDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // Analysis state
+  const [analyzeOpen, setAnalyzeOpen] = useState(false);
+  const [resumes, setResumes] = useState<IResume[]>([]);
+  const [resumesLoading, setResumesLoading] = useState(false);
+  const [analyzingResumeId, setAnalyzingResumeId] = useState<
+    IResume["resumeId"] | null
+  >(null);
+
+  // Editing state
+  const [editOpen, setEditOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editForm, setEditForm] = useState({
+    jobTitle: "",
+    company: "",
+    jobDescription: "",
+  });
+
+  // Description view state
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+  const fetchJob = async () => {
+    setIsLoading(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Authentication error. Please log in again.");
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch job.");
+      }
+
+      const data = (await response.json()) as JobDetail;
+      setJob(data);
+      setEditForm({
+        jobTitle: data.jobTitle || "",
+        company: data.company || "",
+        jobDescription: data.jobDescription || "",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load job.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJob();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
+
+  const handleStatusChange = async (nextStatus: JobStatusType) => {
+    if (!job) return;
+    const previous = job.status;
+    setJob({ ...job, status: nextStatus });
+    setStatusUpdating(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (!response.ok) throw new Error("Failed to update status.");
+    } catch (error) {
+      setJob((current) => (current ? { ...current, status: previous } : current));
+      toast.error(error instanceof Error ? error.message : "Failed to update status.");
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleUpdateJobDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!job) return;
+    setIsUpdating(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) throw new Error("Failed to update job details.");
+
+      setJob({ ...job, ...editForm });
+      toast.success("Job updated successfully.");
+      setEditOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update job.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!job) return;
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!response.ok) throw new Error("Failed to delete job.");
+
+      toast.success("Job deleted.");
+      navigate("/jobs");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete job.");
+    }
+  };
+
+  const openAnalyzeDialog = async () => {
+    setAnalyzeOpen(true);
+    if (resumes.length > 0) return;
+
+    setResumesLoading(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/resume/get-resumes`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!response.ok) throw new Error("Failed to load resumes.");
+      const data = (await response.json()) as IResume[];
+      setResumes(data);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load resumes.");
+    } finally {
+      setResumesLoading(false);
+    }
+  };
+
+  const handleAnalyze = async (resume: IResume) => {
+    if (!job) return;
+    setAnalyzingResumeId(resume.resumeId);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ resumeId: resume.resumeId }),
+      });
+      if (!response.ok) throw new Error("Failed to analyze resume.");
+
+      const result = (await response.json()) as { feedbackId: number };
+
+      setAnalyzeOpen(false);
+      navigate(`/job-analyzed/${result.feedbackId}`, {
+        state: {
+          jobTitle: job.jobTitle,
+          company: job.company,
+          resumeTitle: resume.resumeTitle,
+        },
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to analyze resume."
+      );
+    } finally {
+      setAnalyzingResumeId(null);
+    }
+  };
+
+  if (isLoading || !job) {
+    return (
+      <div className="flex h-64 items-center justify-center px-6 py-8">
+        {isLoading ? (
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Loading job...
+          </div>
+        ) : (
+          <p className="text-muted-foreground">Job not found.</p>
+        )}
+      </div>
+    );
+  }
+
+  const sortedFeedbacks = [...(job.feedbacks || [])].sort(
+    (a, b) => b.overAllMatchScore - a.overAllMatchScore
+  );
+  const bestFeedback = sortedFeedbacks[0];
+  const analyzedResumeIds = new Set(
+    (job.feedbacks || []).map((f) => String(f.resumeId))
+  );
+  const availableResumes = resumes.filter(
+    (r) => !analyzedResumeIds.has(String(r.resumeId))
+  );
+  const status = STATUS_CONFIG[job.status];
+  const isLongDescription = (job.jobDescription?.length || 0) > MAX_DESC_CHARS;
+
+  return (
+    <div className="mx-auto  px-6 py-8">
+      <Link
+        to="/jobs"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Job Tracker
+      </Link>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col gap-6">
+          {/* Main Job Header */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">
+                    {job.jobTitle}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">{job.company}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {bestFeedback && (
+
+                  <ScoreBadge score={bestFeedback.overAllMatchScore} />
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditOpen(true)}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span className="sr-only">Edit Job Details</span>
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-border pt-4">
+              <div className="flex items-center gap-2">
+                <span className={cn("h-2 w-2 rounded-full", status.dot)} />
+                <Select
+                  value={String(job.status)}
+                  onValueChange={(v) => handleStatusChange(Number(v) as JobStatusType)}
+                  disabled={statusUpdating}
+                >
+                  <SelectTrigger className="h-8 w-[150px] text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_ORDER.map((s) => (
+                      <SelectItem key={s} value={String(s)}>
+                        {STATUS_CONFIG[s].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <CalendarClock className="h-4 w-4" />
+                Added {relativeTime(new Date(job.uploadDate))}
+              </span>
+
+              {/* Allert dialgo */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    title="Delete"
+                    className="ml-auto flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-[var(--error-text)]"
+                  > Delete job
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {job.jobTitle}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your Job and remove it from our servers, along with any analysis done.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+
+          {/* Job Description Section */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-2xl font-semibold text-foreground">
+              Job Description
+            </h2>
+            {job.jobDescription ? (
+              <div>
+                <div className="relative">
+                  <div
+                    className={cn(
+                      "prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-foreground",
+                      !isDescExpanded && isLongDescription && "line-clamp-6"
+                    )}
+                  >
+                    {job.jobDescription}
+                  </div>
+                  {/* Fade out gradient when clamped */}
+                  {!isDescExpanded && isLongDescription && (
+                    <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-full bg-gradient-to-t from-card to-transparent" />
+                  )}
+                </div>
+                {isLongDescription && (
+                  <button
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="mt-3 flex items-center gap-1 text-sm font-medium text-foreground hover:underline focus:outline-none"
+                  >
+                    {isDescExpanded ? (
+                      <>
+                        Show less <ChevronUp className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        Read more <ChevronDown className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm italic text-muted-foreground">
+                No description provided. Click the edit icon above to add one.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar: Analyzed Resumes */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Analyses</h2>
+              <p className="text-xs text-muted-foreground">
+                {job.feedbacks?.length || 0} resumes checked
+              </p>
+            </div>
+            <Button onClick={openAnalyzeDialog} size="sm" className="gap-1.5">
+              <Sparkles className="h-4 w-4" />
+              New
+            </Button>
+          </div>
+
+          {sortedFeedbacks.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-center">
+              <p className="text-sm font-medium text-foreground">No analyses yet</p>
+              <p className="text-xs text-muted-foreground">
+                Pick a resume to see how well it matches this job.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {sortedFeedbacks.map((feedback) => (
+                <FeedbackRow
+                  key={feedback.feedbackId}
+                  feedback={feedback}
+                  isBest={feedback === bestFeedback}
+                  jobTitle={job.jobTitle}
+                  company={job.company}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ----------------- MODALS ----------------- */}
+
+      {/* Edit Job Details Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Job Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateJobDetails} className="mt-4 flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="jobTitle" className="text-sm font-medium">
+                Job Title
+              </label>
+              <input
+                id="jobTitle"
+                type="text"
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={editForm.jobTitle}
+                onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="company" className="text-sm font-medium">
+                Company
+              </label>
+              <input
+                id="company"
+                type="text"
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={editForm.company}
+                onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="description" className="text-sm font-medium">
+                Job Description
+              </label>
+              <textarea
+                id="description"
+                className="flex min-h-[250px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={editForm.jobDescription}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, jobDescription: e.target.value })
+                }
+              />
+            </div>
+
+            <DialogFooter className="mt-4">
+              <DialogClose asChild>
+                <Button variant="outline" type="button" disabled={isUpdating}>
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Analyze with Resume Dialog */}
+      <Dialog open={analyzeOpen} onOpenChange={setAnalyzeOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Analyze with a resume</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 flex flex-col gap-2">
+            {resumesLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            ) : availableResumes.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                {resumes.length === 0
+                  ? "You don't have any resumes yet."
+                  : "Every resume has already been analyzed for this job."}
+              </p>
+            ) : (
+              availableResumes.map((resume) => (
+                <button
+                  key={resume.resumeId}
+                  onClick={() => handleAnalyze(resume)}
+                  disabled={analyzingResumeId !== null}
+                  className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-left transition-colors hover:bg-muted disabled:opacity-50"
+                >
+                  <img
+                    src={`${thumbnailUrl}/${resume.resumeThumbnailUrl}`}
+                    alt={resume.resumeTitle}
+                    className="h-14 w-11 shrink-0 rounded border border-border object-cover"
+                  />
+                  <span className="flex-1 truncate text-sm font-medium text-foreground">
+                    {resume.resumeTitle}
+                  </span>
+                  {analyzingResumeId === resume.resumeId ? (
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+          <DialogClose asChild>
+            <Button variant="outline" className="mt-2 w-full">
+              Close
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export default JobDetailPage;

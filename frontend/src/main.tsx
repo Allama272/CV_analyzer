@@ -12,6 +12,7 @@ import { AuthContextProvider } from "@/context/AuthContext.tsx"
 import JobsPage from './pages/JobsPage.tsx';
 import AddJobPage from './pages/AddJobPage.tsx';
 import JobDetailPage from './pages/JobDetailsPage.tsx';
+import JobAnalysisPage from './pages/JobAnalysisPage.tsx';
 
 const router = createBrowserRouter([{
   path: '/',
@@ -54,6 +55,10 @@ const router = createBrowserRouter([{
       path: 'job/:jobId',
       element: <JobDetailPage />
     },
+    {
+      path: 'job-analyzed/:feedbackId',
+      element: <JobAnalysisPage />
+    }
   ]
 }
 ])

@@ -1,33 +1,44 @@
-import FileUploader from "@/components/FileUploader";
 import { useState } from "react";
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, Search, Target } from 'lucide-react';
-import { supabase } from "@/supabaseClient";
-import { Input } from "@/components/ui/input";
+import { Link, useNavigate } from "react-router"; 
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
+import { 
+  ArrowLeft, 
+  Search, 
+  Target, 
+  Sparkles,
+  Loader2,
+  FileText,
+  Upload
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/supabaseClient";
+import { cn } from "@/lib/utils";
 
+import FileUploader from "@/components/FileUploader"; 
 
 const apiUrl = import.meta.env.VITE_DEV_SERVER;
+
 function UploadResume() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [resumeTitle, setResumeTitle] = useState<string>("");
+
     const handleFileSelect = (selectedFile: File | null) => {
         setFile(selectedFile);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
+        if (resumeTitle.trim().length < 5) {
+            toast.error("Please enter a resume title (at least 5 characters).");
+            return;
+        }
 
         if (!file) {
             toast.error("Please choose a resume file to upload.");
-            return;
-        }
-        if (resumeTitle.trim().length < 5) {
-            toast.error("Authentication error. Please log in again.");
             return;
         }
 
@@ -37,7 +48,7 @@ function UploadResume() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 toast.error("Authentication error. Please log in again.");
-                setIsLoading(false); // Stop processing if not logged in
+                setIsLoading(false); 
                 return;
             }
 
@@ -59,9 +70,9 @@ function UploadResume() {
                 const errorMessage = responseData.message || `An error occurred: ${response.statusText}`;
                 throw new Error(errorMessage);
             }
+            
             const resumeId = responseData.resumeId;
             toast.success("Resume uploaded successfully!");
-            console.log(responseData);
             navigate(`/resume/${resumeId}`); 
             
         } catch (error) {
@@ -70,7 +81,6 @@ function UploadResume() {
             } else {
                 toast.error("An unexpected error occurred. Please try again.");
             }
-
         } finally {
             setIsLoading(false);
         }
@@ -80,103 +90,140 @@ function UploadResume() {
         {
             icon: Search,
             title: "Smart Analysis",
-            description: "AI-powered parsing of your resume content"
+            description: "AI-powered parsing of your resume content and formatting."
         },
         {
             icon: Target,
             title: "Skills Matching",
-            description: "Identify gaps and strengths in your skillset"
+            description: "Identify gaps and strengths in your skillset against target roles."
         },
         {
-            icon: Zap,
+            icon: Sparkles,
             title: "Instant Feedback",
-            description: "Get actionable insights in seconds"
+            description: "Get actionable insights and improvement suggestions in seconds."
         }
     ];
 
-    return (
-        <div>
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                {/* Hero Section */}
-                <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-foreground mb-4">
-                        Analyze Your Resume with{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gauge-start)] to-[var(--gauge-end)]">
-                            AI
-                        </span>
-                    </h2>
-                    <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                        Upload your resume and get instant, actionable feedback to improve your
-                        job prospects
-                    </p>
+    const isSubmitDisabled = !file || isLoading || resumeTitle.trim().length < 5;
 
-                    {/* Features */}
-                    <div className="grid md:grid-cols-3 gap-6 mb-12">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                className="bg-card/60 backdrop-blur-sm rounded-xl p-6 border border-border"
-                            >
-                                <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
-                                    <feature.icon className="w-6 h-6 text-secondary-foreground" />
-                                </div>
-                                <h3 className="font-semibold text-foreground mb-2">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-muted-foreground text-sm">
-                                    {feature.description}
+    return (
+        <div className="mx-auto max-w-6xl px-6 py-8">
+            <Link
+                to="/resumes" // Assuming you have a resume list page. Adjust if needed!
+                className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Resumes
+            </Link>
+
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                    Upload a Resume
+                </h1>
+                <p className="mt-2 text-base text-muted-foreground">
+                    Add your resume to get instant, actionable feedback to improve your job prospects.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
+                {/* Left Column: Form Card */}
+                <div className="flex flex-col gap-6">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div className="mb-6 flex items-center gap-3 border-b border-border pb-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                                <FileText className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-foreground">
+                                    Resume Details
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Provide a recognizable title and upload your document.
                                 </p>
                             </div>
-                        ))}
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="resumeTitle" className="text-sm font-medium text-foreground">
+                                    Resume Title
+                                </label>
+                                <Input 
+                                    id="resumeTitle"
+                                    type="text" 
+                                    placeholder="e.g. Senior Frontend Dev - 2024" 
+                                    value={resumeTitle}
+                                    onChange={(e) => setResumeTitle(e.target.value)}
+                                    className="h-10 w-full rounded-md"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-foreground">
+                                    Document Upload
+                                </label>
+                                <div className="rounded-lg border border-border bg-muted/20 p-2">
+                                    <FileUploader onFileSelect={handleFileSelect} />
+                                </div>
+                            </div>
+
+                            <div className="mt-4 flex flex-col items-center gap-3 pt-2 border-t border-border">
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitDisabled}
+                                    className={cn(
+                                        "w-full rounded-full py-6 mt-4 text-base font-medium",
+                                        "transition-all duration-200"
+                                    )}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            Analyzing Resume...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="mr-2 h-5 w-5" />
+                                            Upload & Analyze
+                                        </>
+                                    )}
+                                </Button>
+                                <p className="text-xs text-muted-foreground">
+                                    Your resume data is processed securely and kept private.
+                                </p>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
-                {/* Upload Card */}
-                <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm">
-                    <CardHeader className="text-center pb-4">
-                        <CardTitle className="text-2xl text-foreground">
-                            Upload Your Resume
-                        </CardTitle>
-                        <CardDescription className="text-muted-foreground">
-                            Choose your resume file to get started with the analysis
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <Input type="text" placeholder="Resume Title" onChange={(e) => { setResumeTitle(e.target.value) }}>
-                        </Input>
-                        <FileUploader onFileSelect={handleFileSelect} />
-
-                        <div className="pt-4">
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={!file || isLoading || resumeTitle.length < 5}
-                                className="w-full cursor-pointer bg-gradient-to-r from-[var(--gauge-start)] to-[var(--gauge-end)] text-white font-medium py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                                size="lg"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                        Analyzing Resume...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Zap className="w-5 h-5 mr-2" />
-                                        Analyze Resume
-                                    </>
-                                )}
-                            </Button>
+                {/* Right Column: Features Sidebar */}
+                <div className="flex flex-col gap-4">
+                    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                            Analysis Features
+                        </h3>
+                        <div className="flex flex-col gap-6">
+                            {features.map((feature, index) => (
+                                <div key={index} className="flex gap-4">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50">
+                                        <feature.icon className="h-5 w-5 text-foreground" />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <h4 className="text-sm font-medium text-foreground">
+                                            {feature.title}
+                                        </h4>
+                                        <p className="text-sm leading-relaxed text-muted-foreground">
+                                            {feature.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-
-                        <div className="text-center pt-2">
-                            <p className="text-sm text-muted-foreground">
-                                Your resume data is processed securely
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );
 }
 
-export default UploadResume
+export default UploadResume;

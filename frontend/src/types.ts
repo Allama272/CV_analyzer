@@ -2,7 +2,7 @@ export interface IResume {
     resumeId: number,
     resumeTitle: string,
     resumeThumbnailUrl: string,
-    resumePdfUrl:string,
+    resumePdfUrl: string,
     resumeOverallScore: number,
     resumeUploadDate: string
 }
@@ -125,7 +125,7 @@ export type JobStatusType = typeof JobStatus[keyof typeof JobStatus];
 
 export interface JobFeedbacksMinimal {
     feedbackId: number,
-    overallMatchScore: number,
+    overAllMatchScore: number,
     resumeId: number,
     resumeTitle: string,
     resumeThumbnailUrl: string
@@ -156,4 +156,52 @@ export interface JobDetail {
     status: JobStatusType;
     uploadDate: string;
     feedbacks: JobFeedbacksMinimal[];
+}
+export type JobTipType = "Good" | "Improve";
+
+export interface JobFeedbackTip {
+    type: JobTipType,
+    explanation: string
+}
+
+export interface AtsFeedbackTip {
+    type: JobTipType,
+    tip: string
+}
+
+export interface JobMatchFeedback {
+    matched: string[],
+    missing: string[],
+    score: number,
+    tips: JobFeedbackTip[]
+}
+
+export interface JobSkillsMatchFeedback {
+    matchedSkills: string[],
+    missingSkills: string[],
+    score: number,
+    tips: JobFeedbackTip[]
+}
+
+export interface JobExperienceAlignmentFeedback {
+    score: number,
+    matchedExperience: string[],
+    gaps: string[],
+    tips: JobFeedbackTip[]
+}
+
+export interface JobAtsCompatibilityFeedback {
+    score: number,
+    tips: AtsFeedbackTip[]
+}
+
+export interface AnalyzedJobFeedback {
+    overallScore: number,
+    keywordMatch: JobMatchFeedback,
+    skillsMatch: JobSkillsMatchFeedback,
+    experienceAlignment: JobExperienceAlignmentFeedback,
+    educationAlignment: JobMatchFeedback,
+    atsCompatibility: JobAtsCompatibilityFeedback,
+    status: ProcessingStatus, // reusing your existing enum
+    resumeImageUrl: string
 }
