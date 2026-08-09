@@ -1,58 +1,114 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router"; 
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { 
-  ArrowLeft, 
-  ClipboardCheck, 
-  FileSearch, 
-  BarChart3, 
-  Loader2, 
-  Briefcase,
-  Sparkles,
-  Link as LinkIcon
+import {
+    ArrowLeft,
+    ClipboardCheck,
+    FileSearch,
+    BarChart3,
+    Loader2,
+    Briefcase,
+    Sparkles,
+    Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/supabaseClient";
 import { cn } from "@/lib/utils";
+import type { AutoFillJob, ApiFail } from "@/types";
 
 const apiUrl = import.meta.env.VITE_DEV_SERVER;
+
+// Extensible validation configuration
+const SUPPORTED_PLATFORMS = [
+    { name: 'LinkedIn', regex: /linkedin\.com\/jobs/i },
+    // { name: 'Indeed', regex: /indeed\.com/i },
+    // { name: 'Glassdoor', regex: /glassdoor\.com/i },
+];
 
 function AddJobPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoFilling, setIsAutoFilling] = useState(false);
-    
+
     // Form State
     const [jobUrl, setJobUrl] = useState("");
     const [jobTitle, setJobTitle] = useState("");
     const [company, setCompany] = useState("");
     const [logoUrl, setLogoUrl] = useState("");
     const [jobDescription, setJobDescription] = useState("");
-    
+
     const navigate = useNavigate();
 
-    // Mock function for the Auto-fill UX
-    const handleAutoFill = (e: React.MouseEvent) => {
+    const handleAutoFill = async (e: React.MouseEvent) => {
         e.preventDefault();
-        
-        if (!jobUrl.trim()) {
+
+        const urlToFetch = jobUrl.trim();
+
+        if (!urlToFetch) {
             toast.error("Please paste a link to auto-fill.");
             return;
         }
 
+        // 1. Validation Logic
+        const isValid = SUPPORTED_PLATFORMS.some(platform => platform.regex.test(urlToFetch));
+
+        if (!isValid) {
+            const supportedNames = SUPPORTED_PLATFORMS.map(p => p.name).join(", ");
+            toast.error(`Invalid URL. Currently supported platforms: ${supportedNames}`);
+            return;
+        }
+
         setIsAutoFilling(true);
-        
-        // Simulate network request for UX
-        setTimeout(() => {
+
+        // 2. Fetch Logic
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                toast.error("Authentication error. Please log in again.");
+                setIsAutoFilling(false);
+                return;
+            }
+
+            // Using encodeURIComponent to safely pass the URL in the query string
+            const response = await fetch(`${apiUrl}/api/jobs/autofill?url=${encodeURIComponent(urlToFetch)}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const json = await response.json();
+            const responseData = json as (AutoFillJob & ApiFail);
+
+            if (!response.ok) {
+                const errorMessage = responseData.message || `An error occurred: ${response.statusText}`;
+                throw new Error(errorMessage);
+            }
+
+            // 3. Populate State 
+            setJobTitle(responseData.jobTitle || "");
+            setCompany(responseData.company || "");
+            setLogoUrl(responseData.logoUrl || "");
+            setJobDescription(responseData.jobDescription || "");
+
+            toast.success("Job details extracted successfully!");
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unexpected error occurred while extracting the job.");
+            }
+        } finally {
             setIsAutoFilling(false);
-            toast.info("Auto-fill from URL is coming soon! For now, please enter details manually.");
-        }, 1200);
+        }
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        
+
         if (jobTitle.trim().length < 2) {
             toast.error("Please enter a valid job title.");
             return;
@@ -83,10 +139,10 @@ function AddJobPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    jobUrl: jobUrl.trim(), // Included in payload for future backend support
+                    jobUrl: jobUrl.trim(),
                     jobTitle: jobTitle.trim(),
                     company: company.trim(),
-                    logoUrl: logoUrl.trim(), // Included in payload for future backend support
+                    logoUrl: logoUrl.trim(),
                     jobDescription: jobDescription.trim(),
                 }),
             });
@@ -99,7 +155,7 @@ function AddJobPage() {
             }
 
             toast.success("Job saved successfully!");
-            
+
             // Reset form
             setJobUrl("");
             setJobTitle("");
@@ -176,7 +232,7 @@ function AddJobPage() {
                             </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                        <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-6">
                             {/* Auto-fill Section */}
                             <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4">
                                 <label htmlFor="jobUrl" className="text-sm font-medium text-foreground flex items-center gap-1.5">

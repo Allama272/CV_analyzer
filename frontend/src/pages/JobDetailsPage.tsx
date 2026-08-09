@@ -352,8 +352,16 @@ function JobDetailPage() {
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-                  <Building2 className="h-6 w-6" />
+                <div className="flex h-12 w-12 shrink-0 overflow-hidden items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                  {job.logoUrl ? (
+                    <img
+                      src={job.logoUrl}
+                      alt={`${job.company} logo`}
+                      className="h-full w-full object-cover bg-white"
+                    />
+                  ) : (
+                    <Building2 className="h-6 w-6" />
+                  )}
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">

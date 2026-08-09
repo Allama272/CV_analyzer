@@ -142,6 +142,7 @@ export interface JobWithBestMatchPreview {
     jobId: number,
     company: string,
     jobTitle: string,
+    logoUrl: string | null,
     status: JobStatusType,
     bestMatchScore: number | null, // null when no resumes have been analyzed yet
     resumeCount: number,           // how many resumes were analyzed — 0 if none
@@ -153,6 +154,7 @@ export interface JobDetail {
     company: string;
     jobTitle: string;
     jobDescription: string;
+    logoUrl: string | null;
     status: JobStatusType;
     uploadDate: string;
     feedbacks: JobFeedbacksMinimal[];
@@ -211,4 +213,14 @@ export interface ResumeJobMatch {
     jobTitle: string,
     company: string,
     overallMatchScore: number
+}
+
+export interface AutoFillJob {
+    jobTitle: string,
+    company: string,
+    jobDescription: string,
+    logoUrl: string
+}
+export interface ApiFail {
+    message: string
 }
