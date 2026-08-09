@@ -36,6 +36,7 @@ import { relativeTime } from "@/lib/date";
 import { supabase } from "@/supabaseClient";
 import type { JobFeedbacksMinimal, JobStatusType, IResume, JobDetail } from "@/types";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTrigger, AlertDialog } from "@/components/ui/alert-dialog";
+import ReactMarkdown from "react-markdown";
 
 const apiUrl: string = import.meta.env.VITE_DEV_SERVER;
 const thumbnailUrl = `${import.meta.env.VITE_LOCAL_STORAGE}/thumbnail`;
@@ -454,11 +455,12 @@ function JobDetailPage() {
                 <div className="relative">
                   <div
                     className={cn(
-                      "prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-foreground",
+                      "prose prose-sm dark:prose-invert max-w-none text-foreground",
                       !isDescExpanded && isLongDescription && "line-clamp-6"
                     )}
                   >
-                    {job.jobDescription}
+                    {/* Render Markdown Here */}
+                    <ReactMarkdown>{job.jobDescription}</ReactMarkdown>
                   </div>
                   {/* Fade out gradient when clamped */}
                   {!isDescExpanded && isLongDescription && (
@@ -468,11 +470,11 @@ function JobDetailPage() {
                 {isLongDescription && (
                   <button
                     onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="mt-3 flex items-center gap-1 text-sm font-medium text-foreground hover:underline focus:outline-none"
+                    className="mt-3 flex items-center gap-1 text-sm font-medium text-foreground hover:underline focus:outline-none hover:cursor-pointer "
                   >
                     {isDescExpanded ? (
                       <>
-                        Show less <ChevronUp className="h-4 w-4" />
+                        Show less <ChevronUp className="h-4 w-4 " />
                       </>
                     ) : (
                       <>

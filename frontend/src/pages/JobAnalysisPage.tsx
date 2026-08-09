@@ -182,7 +182,7 @@ function JobAnalysisPage() {
     case ProcessingStatus.Completed: {
       const atsSuggestions = data.atsCompatibility.tips.map((t) => ({
         type: t.type.toLowerCase() as "good" | "improve",
-        tip: t.tip,
+        tip: t.explanation,
       }));
 
       return (

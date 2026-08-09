@@ -27,7 +27,7 @@ function JobsPage() {
       '[data-radix-scroll-area-viewport]'
     ) as HTMLDivElement | null;
     if (!viewport) return;
-    const amount = 400;
+    const amount = 600;
     viewport.scrollBy({
       left: direction === 'left' ? -amount : amount,
       behavior: 'smooth',

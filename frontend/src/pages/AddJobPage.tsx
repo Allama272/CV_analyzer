@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 import {
     ArrowLeft,
     ClipboardCheck,
@@ -9,18 +10,20 @@ import {
     Loader2,
     Briefcase,
     Sparkles,
-    Link as LinkIcon
+    Link as LinkIcon,
+    Eye,
+    Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/supabaseClient";
 import { cn } from "@/lib/utils";
 import type { AutoFillJob, ApiFail } from "@/types";
 
 const apiUrl = import.meta.env.VITE_DEV_SERVER;
 
-// Extensible validation configuration
 const SUPPORTED_PLATFORMS = [
     { name: 'LinkedIn', regex: /linkedin\.com\/jobs/i },
     // { name: 'Indeed', regex: /indeed\.com/i },
@@ -30,6 +33,7 @@ const SUPPORTED_PLATFORMS = [
 function AddJobPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoFilling, setIsAutoFilling] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
 
     // Form State
     const [jobUrl, setJobUrl] = useState("");
@@ -70,7 +74,6 @@ function AddJobPage() {
                 return;
             }
 
-            // Using encodeURIComponent to safely pass the URL in the query string
             const response = await fetch(`${apiUrl}/api/jobs/autofill?url=${encodeURIComponent(urlToFetch)}`, {
                 method: 'GET',
                 headers: {
@@ -92,6 +95,11 @@ function AddJobPage() {
             setCompany(responseData.company || "");
             setLogoUrl(responseData.logoUrl || "");
             setJobDescription(responseData.jobDescription || "");
+
+            // Automatically show preview if we successfully scraped a description
+            if (responseData.jobDescription) {
+                setShowPreview(true);
+            }
 
             toast.success("Job details extracted successfully!");
 
@@ -162,6 +170,7 @@ function AddJobPage() {
             setCompany("");
             setLogoUrl("");
             setJobDescription("");
+            setShowPreview(false);
             navigate("/jobs");
 
         } catch (error) {
@@ -214,7 +223,7 @@ function AddJobPage() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_1fr]">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-[5fr_2fr]">
                 {/* Left Column: Form Card */}
                 <div className="flex flex-col gap-6">
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -315,17 +324,67 @@ function AddJobPage() {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label htmlFor="description" className="text-sm font-medium text-foreground">
-                                    Job Description
-                                </label>
-                                <Textarea
-                                    id="description"
-                                    placeholder="Paste the full job description requirements here..."
-                                    rows={12}
-                                    value={jobDescription}
-                                    onChange={(e) => setJobDescription(e.target.value)}
-                                    className="min-h-[250px] resize-y rounded-md"
-                                />
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="description" className="text-sm font-medium text-foreground">
+                                        Job Description
+                                    </label>
+
+                                    {/* Edit / Preview Toggle */}
+                                    <div className="flex items-center gap-1 rounded-md bg-muted/50 p-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPreview(false)}
+                                            className={cn(
+                                                "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                                                !showPreview
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                            Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPreview(true)}
+                                            className={cn(
+                                                "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                                                showPreview
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            <Eye className="h-3.5 w-3.5" />
+                                            Preview
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Conditional Render: Markdown vs Textarea */}
+                                {showPreview ? (
+                                    /* Wrapper div handles the background, border, and pushes the scrollbar INWARDS slightly from the border */
+                                    <div className="h-96 w-full rounded-md border border-border bg-muted/20 py-3 pl-4 pr-1.5">
+                                        {/* ScrollArea handles the text padding to keep content away from the scrollbar itself */}
+                                        <ScrollArea className="h-full w-full pr-4">
+                                            <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                                                {jobDescription ? (
+                                                    <ReactMarkdown>{jobDescription}</ReactMarkdown>
+                                                ) : (
+                                                    <span className="italic text-muted-foreground">No description to preview yet.</span>
+                                                )}
+                                            </div>
+                                        </ScrollArea>
+                                    </div>
+                                ) : (
+                                    <Textarea
+                                        id="description"
+                                        placeholder="Paste the full job description requirements here..."
+                                        rows={12}
+                                        value={jobDescription}
+                                        onChange={(e) => setJobDescription(e.target.value)}
+                                        className="min-h-[250px] resize-y rounded-md font-mono text-sm"
+                                    />
+                                )}
                             </div>
 
                             <div className="mt-2 flex flex-col items-center gap-3 pt-2">

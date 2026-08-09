@@ -168,7 +168,7 @@ export interface JobFeedbackTip {
 
 export interface AtsFeedbackTip {
     type: JobTipType,
-    tip: string
+    explanation: string
 }
 
 export interface JobMatchFeedback {
