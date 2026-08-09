@@ -4,17 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Summary from "@/components/Summary";
 import ATS from "@/components/ATS";
 import Details from "@/components/Details";
+import JobsAnalyzedSection from "@/components/JobsAnalyzedSection";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import ScoreGauge from "@/components/ScoreGauge";
 import { supabase } from "@/supabaseClient";
 import { toast } from "sonner";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -226,50 +218,13 @@ function DetailedResumePage() {
 
           <Separator className="mx-4 my-4" />
 
-          <h1 className="mx-auto px-5 pb-4 pt-10 text-center text-5xl sm:text-6xl">
-            Jobs Analyzed
-          </h1>
           {/*
-            NOTE: this section is still hardcoded sample data (score 82, "AI Engineer",
-            "Gamma Pegassi TB", a fixed date) — it isn't wired to the real Jobs feature
-            we just built (JobsPage / JobDetailPage / JobWithBestMatchPreview). Once
-            you confirm what this should show — e.g. "jobs this resume has been
-            analyzed against" — I can wire it to real data or replace it with a link
-            into the Job Tracker. Left as-is for now so nothing breaks.
+            NOTE: ResumeFeedback doesn't appear to carry a resume title field
+            anywhere it's used above, so JobsAnalyzedSection isn't passed one —
+            it degrades gracefully (the analysis page just shows generic copy
+            instead of "How {title} matches..."). Pass one here if you have it.
           */}
-          <div className="mx-auto flex flex-col flex-wrap content-center justify-start gap-4 px-5 py-10 md:flex-row">
-            <Card className="h-64 w-52">
-              <CardHeader>
-                <CardTitle className="w-full overflow-hidden text-ellipsis text-center text-xl">
-                  AI Engineer
-                </CardTitle>
-                <CardDescription className="w-full overflow-hidden text-ellipsis text-center">
-                  Gamma Pegassi TB
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScoreGauge score={82} />
-              </CardContent>
-              <CardFooter>
-                <CardDescription className="w-full text-center">
-                  2024-05-15
-                </CardDescription>
-              </CardFooter>
-            </Card>
-
-            {/* Add a new job */}
-            <Card className="flex h-64 w-52 items-center justify-center transition-shadow hover:cursor-pointer hover:shadow-xl hover:shadow-border">
-              <button
-                className="text-7xl text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => {
-                  toast.info("Add job functionality coming soon!");
-                }}
-                aria-label="Add new job analysis"
-              >
-                +
-              </button>
-            </Card>
-          </div>
+          {resumeId && <JobsAnalyzedSection resumeId={resumeId} />}
         </div>
       );
 

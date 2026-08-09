@@ -170,7 +170,7 @@ function JobsPage() {
         <div className="group relative -mx-6">
 
           {/* Left button + Gradient mask (adjusted width & margin to fit the new edge) */}
-          <div className="pointer-events-none absolute bottom-6 left-0 top-0 z-10 hidden w-32 items-center bg-gradient-to-r from-background via-background/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
+          <div className="pointer-events-none absolute bottom-6 left-0 top-0 z-10 hidden w-20 items-center bg-gradient-to-r from-background via-background/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
             <button
               onClick={() => scroll('left')}
               className="pointer-events-auto ml-6 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background shadow-md transition-transform hover:scale-105 hover:bg-accent focus:opacity-100"
@@ -213,7 +213,7 @@ function JobsPage() {
           </ScrollArea>
 
           {/* Right button + Gradient mask */}
-          <div className="pointer-events-none absolute bottom-6 right-0 top-0 z-10 hidden w-32 items-center justify-end bg-gradient-to-l from-background via-background/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
+          <div className="pointer-events-none absolute bottom-6 right-0 top-0 z-10 hidden w-20 items-center justify-end bg-gradient-to-l from-background via-background/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
             <button
               onClick={() => scroll('right')}
               className="pointer-events-auto mr-6 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background shadow-md transition-transform hover:scale-105 hover:bg-accent focus:opacity-100"

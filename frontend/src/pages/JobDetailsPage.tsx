@@ -36,7 +36,6 @@ import { relativeTime } from "@/lib/date";
 import { supabase } from "@/supabaseClient";
 import type { JobFeedbacksMinimal, JobStatusType, IResume, JobDetail } from "@/types";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogHeader, AlertDialogTitle, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTrigger, AlertDialog } from "@/components/ui/alert-dialog";
-import ScoreCircle from "@/components/ScoreCircle";
 
 const apiUrl: string = import.meta.env.VITE_DEV_SERVER;
 const thumbnailUrl = `${import.meta.env.VITE_LOCAL_STORAGE}/thumbnail`;

@@ -205,3 +205,10 @@ export interface AnalyzedJobFeedback {
     status: ProcessingStatus, // reusing your existing enum
     resumeImageUrl: string
 }
+export interface ResumeJobMatch {
+    feedbackId: number,
+    jobId: number,
+    jobTitle: string,
+    company: string,
+    overallMatchScore: number
+}
