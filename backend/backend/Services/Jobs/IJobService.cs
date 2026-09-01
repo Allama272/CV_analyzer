@@ -25,4 +25,6 @@ public interface IJobService
     public Task<ServiceResult> UpdateJob(string userId, int jobId, JobSentDto jobUpdate);
 
     public Task<ServiceResult> DeleteJob(string userId, int jobId);
+
+    public Task<ServiceResult> HandleArchiveJob(string userId, int jobId, bool archive);
 }

@@ -14,7 +14,7 @@ public class JobSentDto
     public required string Company { get; set; }
 
     [Required(ErrorMessage = "Job description is required.")]
-    [StringLength(2000, ErrorMessage = "Job description cannot exceed 2000 characters.")]
+    [StringLength(5000, ErrorMessage = "Job description cannot exceed 5000 characters.")]
     public required string JobDescription { get; set; }
 
     public string? LogoUrl { get; set; }

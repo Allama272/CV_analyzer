@@ -11,6 +11,8 @@ public class JobWithFeedbacksPreview
     public string JobDescription { get; set; }
     public string? LogoUrl { get; set; }
     public JobStatus Status { get; set; }
+
+    public bool Archived { get; set; }
     public DateTime uploadDate { get; set; }
 
     public IEnumerable<JobFeedbackMinimalDto> Feedbacks { get; set; }
@@ -32,6 +34,7 @@ public class JobWithBestMatchPreview
     public string JobTitle { get; set; }
     public string? LogoUrl { get; set; }
     public JobStatus Status { get; set; }
+    public bool Archived { get; set; }
     public int? BestMatchScore { get; set; }
     public int ResumeCount { get; set; }
     public DateTime CreatedAt { get; set; }

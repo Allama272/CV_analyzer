@@ -5,7 +5,7 @@ using backend.Services.Analytics;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace Tests;
+namespace Tests.Services.Analytics;
 
 public class KpiProviderTests
 {
@@ -111,8 +111,7 @@ public class KpiProviderTests
         Assert.Equal(50, result.ActiveOnly.OfferRatePercent);
         
         // Scores: Max of Job 1 (80) + Max of Job 2 (90) = 170. Total = 2. 
-        // Based on current service CalculateRate logic: (170/2) * 100 = 8500
-        Assert.Equal(8500, result.ActiveOnly.AverageMatchScore); 
+        Assert.Equal(85, result.ActiveOnly.AverageMatchScore); 
 
         // Assert - Including Archived
         Assert.NotNull(result.IncludingArchived);
@@ -127,8 +126,7 @@ public class KpiProviderTests
         Assert.Equal(33.33, Math.Round(result.IncludingArchived.OfferRatePercent.Value, 2));
         
         // Scores: 80 + 90 + 40 = 210. Total = 3. 
-        // Based on current service CalculateRate logic: (210/3) * 100 = 7000
-        Assert.Equal(7000, result.IncludingArchived.AverageMatchScore);
+        Assert.Equal(70, result.IncludingArchived.AverageMatchScore);
     }
 
     [Fact]

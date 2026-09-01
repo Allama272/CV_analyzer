@@ -12,6 +12,9 @@ import {
   Sparkles,
   Trash2,
   Pencil,
+  Archive,
+  ArchiveRestore,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,12 +26,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getScoreTier, SCORE_TIER_STYLES } from "@/lib/score";
 import { STATUS_CONFIG, STATUS_ORDER } from "@/lib/job-status";
@@ -192,6 +196,37 @@ function JobDetailPage() {
     }
   };
 
+  const handleArchiveToggle = async (archived: boolean) => {
+    if (!job) return;
+    const previousState = job.archived;
+
+    // Optimistic UI update
+    setJob({ ...job, archived });
+    toast.success(archived ? "Job archived" : "Job restored");
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication error.");
+
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}/archive`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ archived }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update archive status.");
+    } catch (error) {
+      // Rollback on failure
+      setJob({ ...job, archived: previousState });
+      toast.error(error instanceof Error ? error.message : "Failed to update job.");
+    }
+  };
+
   const handleUpdateJobDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!job) return;
@@ -338,7 +373,7 @@ function JobDetailPage() {
   const isLongDescription = (job.jobDescription?.length || 0) > MAX_DESC_CHARS;
 
   return (
-    <div className="mx-auto  px-6 py-8">
+    <div className="mx-auto px-6 py-8">
       <Link
         to="/jobs"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -365,15 +400,22 @@ function JobDetailPage() {
                   )}
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    {job.jobTitle}
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-foreground">
+                      {job.jobTitle}
+                    </h1>
+                    {job.archived && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground ring-1 ring-inset ring-border">
+                        <Archive className="h-3 w-3" />
+                        Archived
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">{job.company}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {bestFeedback && (
-
                   <ScoreBadge score={bestFeedback.overAllMatchScore} />
                 )}
                 <Button
@@ -389,24 +431,50 @@ function JobDetailPage() {
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-border pt-4">
+
+              {/* STATUS DROPDOWN MENU */}
               <div className="flex items-center gap-2">
-                <span className={cn("h-2 w-2 rounded-full", status.dot)} />
-                <Select
-                  value={String(job.status)}
-                  onValueChange={(v) => handleStatusChange(Number(v) as JobStatusType)}
-                  disabled={statusUpdating}
-                >
-                  <SelectTrigger className="h-8 w-[150px] text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-8 w-[160px] justify-start text-sm font-normal"
+                      disabled={statusUpdating}
+                    >
+                      <span
+                        className={cn(
+                          "mr-2 inline-block h-2 w-2 rounded-full",
+                          status.dot
+                        )}
+                      />
+                      {status.label}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side="bottom"
+                    align="start"
+                    className="w-[160px]"
+                  >
+                    <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">Move to</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     {STATUS_ORDER.map((s) => (
-                      <SelectItem key={s} value={String(s)}>
+                      <DropdownMenuItem
+                        key={s}
+                        onSelect={() => handleStatusChange(s)}
+                        className="flex items-center"
+                      >
+                        <span
+                          className={cn(
+                            "mr-2 inline-block h-2 w-2 rounded-full",
+                            STATUS_CONFIG[s].dot
+                          )}
+                        />
                         {STATUS_CONFIG[s].label}
-                      </SelectItem>
+                        {job.status === s && <Check className="ml-auto h-3.5 w-3.5" />}
+                      </DropdownMenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -414,34 +482,54 @@ function JobDetailPage() {
                 Added {relativeTime(new Date(job.uploadDate))}
               </span>
 
-              {/* Allert dialgo */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    title="Delete"
-                    className="ml-auto flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-[var(--error-text)]"
-                  > Delete job
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {job.jobTitle}?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your Job and remove it from our servers, along with any analysis done.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      variant="destructive"
-                      onClick={handleDelete}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {/* Action Buttons (Archive & Delete) */}
+              <div className="ml-auto flex items-center gap-4">
+                <button
+                  onClick={() => handleArchiveToggle(!job.archived)}
+                  title={job.archived ? "Restore job" : "Archive job"}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {job.archived ? (
+                    <>
+                      <ArchiveRestore className="h-4 w-4" />
+                      Restore
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="h-4 w-4" />
+                      Archive
+                    </>
+                  )}
+                </button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      title="Delete"
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-[var(--error-text)]"
+                    > Delete job
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {job.jobTitle}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your Job and remove it from our servers, along with any analysis done.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
 
@@ -459,10 +547,8 @@ function JobDetailPage() {
                       !isDescExpanded && isLongDescription && "line-clamp-6"
                     )}
                   >
-                    {/* Render Markdown Here */}
                     <ReactMarkdown>{job.jobDescription}</ReactMarkdown>
                   </div>
-                  {/* Fade out gradient when clamped */}
                   {!isDescExpanded && isLongDescription && (
                     <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-full bg-gradient-to-t from-card to-transparent" />
                   )}
@@ -470,11 +556,11 @@ function JobDetailPage() {
                 {isLongDescription && (
                   <button
                     onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="mt-3 flex items-center gap-1 text-sm font-medium text-foreground hover:underline focus:outline-none hover:cursor-pointer "
+                    className="mt-3 flex items-center gap-1 text-sm font-medium text-foreground hover:underline focus:outline-none hover:cursor-pointer"
                   >
                     {isDescExpanded ? (
                       <>
-                        Show less <ChevronUp className="h-4 w-4 " />
+                        Show less <ChevronUp className="h-4 w-4" />
                       </>
                     ) : (
                       <>

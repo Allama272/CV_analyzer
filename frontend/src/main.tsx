@@ -13,6 +13,7 @@ import JobsPage from './pages/JobsPage.tsx';
 import AddJobPage from './pages/AddJobPage.tsx';
 import JobDetailPage from './pages/JobDetailsPage.tsx';
 import JobAnalysisPage from './pages/JobAnalysisPage.tsx';
+import AnalyticsPage from './pages/AnalyticsPage.tsx';
 
 const router = createBrowserRouter([{
   path: '/',
@@ -58,6 +59,10 @@ const router = createBrowserRouter([{
     {
       path: 'job-analyzed/:feedbackId',
       element: <JobAnalysisPage />
+    },
+    {
+      path: 'analytics/summary',
+      element: <AnalyticsPage />
     }
   ]
 }

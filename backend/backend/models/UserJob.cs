@@ -12,6 +12,7 @@ public class UserJob
     public DateTime UploadDate { get; set; } = DateTime.UtcNow;
     public string UserId { get; set; }
     public JobStatus Status { get; set; }
+    public bool Archived { get; set; } = false;
 
     public virtual ICollection<ResumeJobFeedback> Feedbacks { get; set; } = new List<ResumeJobFeedback>();
 }
@@ -23,5 +24,4 @@ public enum JobStatus
     Interviewing,
     Offered,
     Rejected,
-    Archived
 }

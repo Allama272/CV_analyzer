@@ -1,12 +1,11 @@
 ﻿using backend.Data;
 using backend.models;
-using backend.Services;
 using backend.Services.Jobs;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace Tests;
+namespace Tests.Services;
 
 public class JobServiceTest
 {

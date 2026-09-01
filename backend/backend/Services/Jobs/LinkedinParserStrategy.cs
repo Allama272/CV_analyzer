@@ -23,7 +23,7 @@ public partial class LinkedinParserStrategy : IJobParserStrategy
         //  Extract the Job ID
         var match = MyRegex().Match(jobLink);
         if (!match.Success)
-            return ServiceResult<JobFillDto>.Failure("Cant Find Job Id"); // Fixed to JobFillDto
+            return ServiceResult<JobFillDto>.Failure("Cant Find Job Id");
 
         string jobId = match.Value;
         string guestUrl = $"{GuestApi}/{jobId}";

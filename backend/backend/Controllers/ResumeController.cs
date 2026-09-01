@@ -8,6 +8,7 @@ namespace backend.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
+    [ApiController]
     public class ResumeController : ControllerBase
     {
         private readonly IResumeService _resumeService;
@@ -19,7 +20,7 @@ namespace backend.Controllers
             _backgroundJobClient = backgroundJobClient;
         }
 
-        public string GetUserId()
+        private string GetUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier);
         }

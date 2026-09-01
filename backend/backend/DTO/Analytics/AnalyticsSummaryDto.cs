@@ -1,6 +1,7 @@
 ﻿namespace backend.DTO.Analytics;
 
-public class AnalyticsSummaryDto
+public record AnalyticsSummaryDto
 {
-    
+    public AnalyticsScopeDto ActiveOnly { get; init; }
+    public AnalyticsScopeDto IncludingArchived { get; init; }
 }

@@ -69,6 +69,7 @@ public class JobService : IJobService
                 LogoUrl = j.LogoUrl,
                 uploadDate = j.UploadDate,
                 Status = j.Status,
+                Archived = j.Archived,
                 Feedbacks = j.Feedbacks.Select(f => new JobFeedbackMinimalDto
                 {
                     ResumeId = f.ResumeId,
@@ -213,6 +214,7 @@ public class JobService : IJobService
                 JobTitle = j.JobTitle,
                 LogoUrl = j.LogoUrl,
                 Status = j.Status,
+                Archived = j.Archived,
                 ResumeCount = j.Feedbacks.Count(),
                 BestMatchScore = j.Feedbacks.Max(f => (int?)f.OverallMatchScore),
                 CreatedAt = j.UploadDate
@@ -232,6 +234,7 @@ public class JobService : IJobService
                 Company = j.Company,
                 JobTitle = j.JobTitle,
                 Status = j.Status,
+                Archived = j.Archived,
 
                 Feedbacks = j.Feedbacks.Select(f => new JobFeedbackMinimalDto
                 {
@@ -297,6 +300,15 @@ public class JobService : IJobService
     {
         var rowsAffected = await _dbContext.UserJobs.Where(j => j.Id == jobId && j.UserId == userId)
             .ExecuteDeleteAsync();
+        return rowsAffected == 0
+            ? ServiceResult.Failure("Job Not Found")
+            : ServiceResult.Success();
+    }
+
+    public async Task<ServiceResult> HandleArchiveJob(string userId, int jobId, bool archive)
+    {
+        var rowsAffected = await _dbContext.UserJobs.Where(j => j.Id == jobId && j.UserId == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Archived, archive));
         return rowsAffected == 0
             ? ServiceResult.Failure("Job Not Found")
             : ServiceResult.Success();

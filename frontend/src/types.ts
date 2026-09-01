@@ -118,8 +118,7 @@ export const JobStatus = {
     Applied: 1,
     Interviewing: 2,
     Offered: 3,
-    Rejected: 4,
-    Archived: 5
+    Rejected: 4
 } as const;
 export type JobStatusType = typeof JobStatus[keyof typeof JobStatus];
 
@@ -144,6 +143,7 @@ export interface JobWithBestMatchPreview {
     jobTitle: string,
     logoUrl: string | null,
     status: JobStatusType,
+    archived: boolean;
     bestMatchScore: number | null, // null when no resumes have been analyzed yet
     resumeCount: number,           // how many resumes were analyzed — 0 if none
     createdAt: string
@@ -156,6 +156,7 @@ export interface JobDetail {
     jobDescription: string;
     logoUrl: string | null;
     status: JobStatusType;
+    archived: boolean;
     uploadDate: string;
     feedbacks: JobFeedbacksMinimal[];
 }
@@ -223,4 +224,46 @@ export interface AutoFillJob {
 }
 export interface ApiFail {
     message: string
+}
+
+export const ScoreBucket = {
+    NotAnalyzed: 0,
+    Below40: 1,
+    Between40And60: 2,
+    Between60And80: 3,
+    Above80: 4,
+} as const;
+
+export type ScoreBucket = typeof ScoreBucket[keyof typeof ScoreBucket];
+
+
+export interface KpisDto {
+    totalJobs: number;
+    addedThisWeek: number;
+    interviewRatePercent: number | null;
+    offerRatePercent: number | null;
+    averageMatchScore: number | null;
+}
+
+export interface WeekBucketDto {
+    weekStart: string; // "YYYY-MM-DD" (DateOnly)
+    count: number;
+}
+
+export interface OutcomesDto {
+    offered: number;
+    rejected: number;
+}
+
+export interface AnalyticsScopeDto {
+    kpis: KpisDto;
+    statusBreakdown: Record<string, number>; // numeric JobStatus as string key
+    jobsOverTime: WeekBucketDto[];
+    scoreHistogram: Record<string, number>; // numeric ScoreBucket as string key
+    outcomes: OutcomesDto;
+}
+
+export interface AnalyticsSummaryDto {
+    activeOnly: AnalyticsScopeDto;
+    includingArchived: AnalyticsScopeDto;
 }

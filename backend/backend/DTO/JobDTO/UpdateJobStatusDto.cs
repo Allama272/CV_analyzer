@@ -4,5 +4,7 @@ namespace backend.DTO.JobDTO;
 
 public class UpdateJobStatusDto
 {
-   public JobStatus Status { get; set; } 
+    public JobStatus Status { get; set; }
 }
+
+public record ArchiveJobRequest(bool Archived);

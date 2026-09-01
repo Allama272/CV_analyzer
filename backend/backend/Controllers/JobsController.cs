@@ -11,7 +11,8 @@ namespace backend.Controllers;
 
 [Authorize]
 [Route("api/[controller]")]
-public class JobsController : Controller
+[ApiController]
+public class JobsController : ControllerBase
 {
     // private readonly string _testUserId = "844394c6-97fb-4ae4-a4e9-bc117ec0e760";
     private readonly IJobService _jobService;
@@ -23,7 +24,7 @@ public class JobsController : Controller
         _urlProcessor = urlProcessor;
     }
 
-    public string GetUserId()
+    private string GetUserId()
     {
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
@@ -130,6 +131,18 @@ public class JobsController : Controller
         }
 
         return Ok(new { status = request.Status });
+    }
+
+    [HttpPatch("{jobId:int}/archive")]
+    public async Task<IActionResult> UpdateJobArchive(int jobId, [FromBody] ArchiveJobRequest request)
+    {
+        var result = await _jobService.HandleArchiveJob(userId: GetUserId(), jobId, request.Archived);
+        if (!result.IsSuccess)
+        {
+            return NotFound(new { message = result.ErrorMessage });
+        }
+
+        return Ok(new { Archived = request.Archived });
     }
 
     [HttpPut("{jobId:int}")]

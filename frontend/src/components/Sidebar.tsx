@@ -10,6 +10,7 @@ import {
     Menu,
     PanelLeftClose,
     PanelLeftOpen,
+    BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
+
 } from "@/components/ui/sheet";
 import { useTheme } from "@/components/theme-provider";
 import { UserAuth } from "@/context/AuthContext";
@@ -35,6 +37,7 @@ const NAV_LINKS = [
     { to: "/", label: "Home", icon: Home, end: true },
     { to: "resumes", label: "Resumes", icon: FileText },
     { to: "jobs", label: "Job Applications", icon: Briefcase },
+    { to: "analytics/summary", label: "Analytics", icon: BarChart3 },
 ];
 
 interface NavItemProps {
