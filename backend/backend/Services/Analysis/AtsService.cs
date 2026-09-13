@@ -4,6 +4,7 @@ using backend.DTO;
 using backend.DTO.JobDTO;
 using backend.models;
 using backend.Services.Resumes;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services.Analysis;
@@ -14,14 +15,16 @@ public class AtsService : IAtsService
     private ResumeDbContext _dbContext;
     private IResumeParserService _parser;
     private IAiAnalysisService _aiAnalysis;
+    private readonly IMediator _mediator;
 
     public AtsService(IStorage storage, ResumeDbContext dbContext, IResumeParserService parser,
-        IAiAnalysisService aiAnalysis)
+        IAiAnalysisService aiAnalysis, IMediator mediator)
     {
         _storage = storage;
         _dbContext = dbContext;
         _parser = parser;
         _aiAnalysis = aiAnalysis;
+        _mediator = mediator;
     }
 
     public async Task AnalyzeResume(int resumeId)
@@ -61,6 +64,7 @@ public class AtsService : IAtsService
             feedbackEntity.Status = ProcessingStatus.Completed;
             feedbackEntity.CompletedAt = DateTime.UtcNow;
             feedbackEntity.ErrorMessage = null;
+            await _mediator.Publish(new ResumeAnalyzedEvent(resumeId, feedbackEntity.Id, feedbackEntity.UserId));
         }
         catch (Exception e)
         {
@@ -112,6 +116,8 @@ public class AtsService : IAtsService
             feedbackEntity.Status = ProcessingStatus.Completed;
             feedbackEntity.CompletedAt = DateTime.UtcNow;
             feedbackEntity.ErrorMessage = null;
+            await _mediator.Publish(new JobAnalyzedEvent(feedbackEntity.UserJobId, feedbackEntity.ResumeId, feedbackId,
+                feedbackEntity.UserId));
         }
         catch (Exception e)
         {

@@ -65,7 +65,6 @@ function StatCard({
     </div>
   );
 }
-
 function EmptySection({
   message,
   actionLabel,

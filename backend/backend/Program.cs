@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.RateLimiting;
+using backend.cache;
 using backend.Data;
 using backend.Services;
 using backend.Services.Resumes;
@@ -9,6 +10,7 @@ using backend.Services.Analytics;
 using backend.Services.Jobs;
 using Hangfire;
 using Hangfire.Storage.SQLite;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 
-var userAccount = WindowsIdentity.GetCurrent().Name;
+var userAccount = Environment.UserName;
 Console.WriteLine($"Application is running under the user: {userAccount}");
 
 var builder = WebApplication.CreateBuilder(args);
@@ -130,6 +132,13 @@ builder.Services.AddDbContext<ResumeDbContext>(options =>
 builder.Services.AddDbContextFactory<ResumeDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")), ServiceLifetime.Scoped);
 
+// Redis
+builder.Services.AddStackExchangeRedisCache(redisOptions =>
+{
+    var connection = builder.Configuration.GetConnectionString("Redis");
+    redisOptions.Configuration = connection;
+});
+
 // Hangfire
 builder.Services.AddHangfire(config => config
     .UseSQLiteStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
@@ -165,6 +174,10 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobUrlProcessor, JobUrlProcessor>();
 builder.Services.AddAnalyticsDashboard();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICacheService, RedisCache>();
+
+// MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 // HTTP clients and job parsers
 builder.Services.AddHttpClient<LinkedinParserStrategy>(client =>

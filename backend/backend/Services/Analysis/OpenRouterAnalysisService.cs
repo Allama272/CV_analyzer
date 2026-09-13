@@ -119,7 +119,11 @@ in your tips, matched/missing lists, and gaps.
         };
 
         ChatCompletion response = await _chatClient.CompleteChatAsync(messages, _chatOptions);
-
+        if (response == null)
+        {
+            throw new InvalidOperationException(
+                "AI analysis failed. The API returned no choices. This usually indicates an OpenRouter error (e.g., invalid model, out of credits, or context limits).");
+        }
         if (response?.Content == null || response.Content.Count == 0)
         {
             string finishReason = response?.FinishReason.ToString() ?? "Unknown";
