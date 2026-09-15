@@ -46,6 +46,8 @@ backend/**/[Tt]est[Rr]esults/
 backend/**/appsettings.Development.json
 backend/**/appsettings.local.json
 
+backend/**/appsettings.json
+
 # Rider / ReSharper
 backend/**/*.DotSettings.user
 
