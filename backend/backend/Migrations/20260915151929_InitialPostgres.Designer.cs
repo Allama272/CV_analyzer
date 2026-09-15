@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
 
 #nullable disable
@@ -11,43 +12,53 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(ResumeDbContext))]
-    [Migration("20251007124211_AddedJobFeedbackAndFixingJSON5")]
-    partial class AddedJobFeedbackAndFixingJSON5
+    [Migration("20260915151929_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("backend.models.Resume", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FileUrl")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImagePreviewUrl")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImageThumbnailUrl")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
+
+                    b.Property<string>("ParsedTextUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UploadDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -58,45 +69,51 @@ namespace backend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Ats")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ContentQuality")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<string>("ErrorMessage")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Formatting")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<int>("OverallScore")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ResumeId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SkillsCoverage")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<DateTime?>("StartedProcessingAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Structure")
                         .IsRequired()
                         .HasColumnType("json");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -110,88 +127,100 @@ namespace backend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AtsCompatibility")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CvImageUrl")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EducationAlignment")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<string>("ErrorMessage")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ExperienceAlignment")
                         .IsRequired()
                         .HasColumnType("json");
-
-                    b.Property<int>("JobId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("KeywordMatch")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<int>("OverallMatchScore")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ResumeId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SkillsMatch")
                         .IsRequired()
                         .HasColumnType("json");
 
                     b.Property<DateTime?>("StartedProcessingAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("UserJobId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ResumeId");
-
                     b.HasIndex("UserJobId");
 
-                    b.ToTable("ResumeJobFeedback");
+                    b.HasIndex("ResumeId", "UserJobId")
+                        .IsUnique();
+
+                    b.ToTable("ResumeJobFeedbacks");
                 });
 
             modelBuilder.Entity("backend.models.UserJob", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("JobDescription")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("JobTitle")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UploadDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -218,7 +247,7 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.HasOne("backend.models.UserJob", "UserJob")
-                        .WithMany()
+                        .WithMany("Feedbacks")
                         .HasForeignKey("UserJobId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -229,6 +258,12 @@ namespace backend.Migrations
                 });
 
             modelBuilder.Entity("backend.models.Resume", b =>
+                {
+                    b.Navigation("Feedbacks")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("backend.models.UserJob", b =>
                 {
                     b.Navigation("Feedbacks");
                 });

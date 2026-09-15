@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading.RateLimiting;
 using backend.cache;
 using backend.Data;
@@ -127,10 +126,14 @@ builder.Services.AddCors(options =>
 });
 
 // Database contexts
+var connectionString = builder.Configuration.GetConnectionString("PostgresConnection");
+
 builder.Services.AddDbContext<ResumeDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
+    options.UseNpgsql(connectionString));
+
 builder.Services.AddDbContextFactory<ResumeDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")), ServiceLifetime.Scoped);
+    options.UseNpgsql(connectionString), ServiceLifetime.Scoped);
+
 
 // Redis
 builder.Services.AddStackExchangeRedisCache(redisOptions =>
