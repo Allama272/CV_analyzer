@@ -2,6 +2,8 @@
 .env
 frontend/.env
 client_secret_*.json
+backend/**/appsettings.json
+backend/**/appsettings.*.json
 
 # Databases & Backups
 *.backup.gz
@@ -58,3 +60,5 @@ backend/backend/uploads/thumbnail/*
 backend/backend/uploads/text/*
 backend/backend.tests
 backend/playgroundTests
+.lazy.lua
+.gitignore
