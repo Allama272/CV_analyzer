@@ -1,4 +1,4 @@
-# CV Analyzer
+z# CV Analyzer
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![.NET 9](https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white)
@@ -108,7 +108,6 @@ CV_analyzer/
 │   │   ├── Storage/              Storage abstraction + local provider
 │   │   ├── cache/                Redis cache + invalidation handlers
 │   │   └── Migrations/           EF Core migrations
-│   ├── backend.tests/            NUnit
 │   ├── Tests/                    xUnit
 │   └── backend.sln
 ├── frontend/
@@ -195,8 +194,7 @@ In development, the API also exposes an OpenAPI/Scalar reference and a Hangfire 
 cd backend
 dotnet test backend.sln
 
-# or target one project
-dotnet test backend/backend.tests/backend.tests.csproj
+# or
 dotnet test backend/Tests/Tests.csproj
 ```
 
