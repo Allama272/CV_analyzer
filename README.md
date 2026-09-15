@@ -1,4 +1,4 @@
-z# CV Analyzer
+# CV Analyzer
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![.NET 9](https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white)
